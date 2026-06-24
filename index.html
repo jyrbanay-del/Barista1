@@ -503,7 +503,7 @@
             ${answersReport}
         `;
 
-        fetch("https://formsubmit.co/ajax/Jyrbanay@mail.ru", {
+        fetch("https://formspree.io/f/xrewerad", {
             method: "POST",
             headers: { 
                 'Content-Type': 'application/json',
@@ -515,9 +515,8 @@
                 message: textMessage
             })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success === "true") {
+        .then(response => {
+            if (response.ok) {
                 document.getElementById('send-status').innerHTML = "✅ Результат отправлен администратору.";
                 document.getElementById('send-status').style.color = "var(--correct)";
             } else {
