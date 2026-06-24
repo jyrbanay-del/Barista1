@@ -1,3 +1,11 @@
+// ============================================
+// НАСТРОЙКИ — ВСТАВЬ СЮДА СВОЙ URL FORMSPREE
+// ============================================
+const FORMSPREE_URL = "https://formspree.io/f/YOUR_FORM_ID";
+
+// ============================================
+// ДАННЫЕ ТЕСТА
+// ============================================
 const questions = [
     {
         text: "1. Какая идеальная температура взбитого молока для классического капучино?",
@@ -166,72 +174,195 @@ const questions = [
     }
 ];
 
-function initQuiz() {
-    const form = document.getElementById('quiz-form');
+// ============================================
+// СОСТОЯНИЕ
+// ============================================
+let studentName = "";
+let studentEmail = "";
+let sent = false;
 
-    questions.forEach((q, qIndex) => {
-        let questionHTML = `<div class="question-block">`;
-        questionHTML += `<div class="question-text">${q.text}</div>`;
+// ============================================
+// ИНИЦИАЛИЗАЦИЯ
+// ============================================
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("start-btn").addEventListener("click", startQuiz);
+    document.getElementById("submit-btn").addEventListener("click", checkAnswers);
+});
 
-        q.options.forEach((option, oIndex) => {
-            questionHTML += `
-                <label class="option">
-                    <input type="radio" name="q${qIndex}" value="${oIndex}"> ${option}
-                </label>`;
-        });
+function startQuiz() {
+    const nameInput = document.getElementById("student-name");
+    const emailInput = document.getElementById("student-email");
 
-        questionHTML += `<div class="explanation" id="explanation-${qIndex}"><strong>Объяснение:</strong> ${q.explanation}</div>`;
-        questionHTML += `</div>`;
+    let valid = true;
 
-        form.innerHTML += questionHTML;
-    });
+    if (!nameInput.value.trim()) {
+        nameInput.classList.add("error");
+        valid = false;
+    } else {
+        nameInput.classList.remove("error");
+    }
 
-    document.getElementById('submit-btn').addEventListener('click', checkAnswers);
+    if (!emailInput.value.trim() || !emailInput.value.includes("@")) {
+        emailInput.classList.add("error");
+        valid = false;
+    } else {
+        emailInput.classList.remove("error");
+    }
+
+    if (!valid) return;
+
+    studentName = nameInput.value.trim();
+    studentEmail = emailInput.value.trim();
+
+    document.getElementById("student-form").style.display = "none";
+    document.getElementById("quiz-section").style.display = "block";
+
+    renderQuestions();
 }
 
+function renderQuestions() {
+    const form = document.getElementById("quiz-form");
+
+    questions.forEach(function (q, qIndex) {
+        var block = '<div class="question-block">';
+        block += '<div class="question-text">' + q.text + '</div>';
+
+        q.options.forEach(function (option, oIndex) {
+            block += '<label class="option">';
+            block += '<input type="radio" name="q' + qIndex + '" value="' + oIndex + '"> ' + option;
+            block += '</label>';
+        });
+
+        block += '<div class="explanation" id="explanation-' + qIndex + '"><strong>Объяснение:</strong> ' + q.explanation + '</div>';
+        block += '</div>';
+
+        form.innerHTML += block;
+    });
+}
+
+// ============================================
+// ПРОВЕРКА ОТВЕТОВ
+// ============================================
 function checkAnswers() {
-    let score = 0;
+    var score = 0;
+    var wrongAnswers = [];
 
-    questions.forEach((q, qIndex) => {
-        const options = document.querySelectorAll(`input[name="q${qIndex}"]`);
-        const explanationDiv = document.getElementById(`explanation-${qIndex}`);
+    questions.forEach(function (q, qIndex) {
+        var options = document.querySelectorAll('input[name="q' + qIndex + '"]');
+        var explanationDiv = document.getElementById("explanation-" + qIndex);
 
-        options.forEach((option, oIndex) => {
-            const label = option.parentElement;
-            label.classList.add('disabled');
-            label.classList.remove('correct', 'incorrect');
+        var answered = false;
+
+        options.forEach(function (option, oIndex) {
+            var label = option.parentElement;
+            label.classList.add("disabled");
+            label.classList.remove("correct", "incorrect");
 
             if (option.checked) {
+                answered = true;
                 if (oIndex === q.correct) {
-                    label.classList.add('correct');
+                    label.classList.add("correct");
                     score++;
                 } else {
-                    label.classList.add('incorrect');
-                    options[q.correct].parentElement.classList.add('correct');
+                    label.classList.add("incorrect");
+                    options[q.correct].parentElement.classList.add("correct");
+                    wrongAnswers.push(qIndex + 1);
                 }
             }
         });
 
-        explanationDiv.style.display = 'block';
+        if (!answered) {
+            wrongAnswers.push(qIndex + 1);
+        }
+
+        explanationDiv.style.display = "block";
     });
 
-    showResult(score);
+    showResult(score, wrongAnswers);
 }
 
-function showResult(score) {
-    const resultDiv = document.getElementById('result');
-    resultDiv.style.display = 'block';
+// ============================================
+// ПОКАЗ РЕЗУЛЬТАТА И ОТПРАВКА
+// ============================================
+function showResult(score, wrongAnswers) {
+    var resultDiv = document.getElementById("result");
+    resultDiv.style.display = "block";
 
-    let percentage = (score / questions.length) * 100;
-    let message = "";
+    var percentage = Math.round((score / questions.length) * 100);
+    var passed = percentage >= 70;
+    var status = passed ? "СДАН" : "НЕ СДАН";
+    var message = "";
 
-    if (percentage === 100) message = "Идеально! Вы гуру кофемани!";
+    if (percentage === 100) message = "Идеально! Вы гуру кофемании!";
     else if (percentage >= 70) message = "Отличный результат! Вы знаете свое дело.";
     else if (percentage >= 50) message = "Неплохо, но есть куда расти.";
-    else message = "Нужно подучить теорию. Загляните на бариста-курсы!";
+    else message = "Нужно подучить теорию.";
 
-    resultDiv.innerHTML = `Ваш результат: <span style="color: #6f4e37;">${score}</span> из <span style="color: #6f4e37;">${questions.length}</span><br><br>${message}`;
-    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    resultDiv.innerHTML =
+        "Ваш результат: <span style='color: #6f4e37;'>" + score + "</span> из <span style='color: #6f4e37;'>" + questions.length + "</span> (" + percentage + "%)<br><br>" +
+        "<strong>Статус: " + status + "</strong><br><br>" +
+        message;
+
+    resultDiv.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    sendResult(score, percentage, status, wrongAnswers);
 }
 
-document.addEventListener('DOMContentLoaded', initQuiz);
+// ============================================
+// ОТПРАВКА НА FORMSPREE
+// ============================================
+function sendResult(score, percentage, status, wrongAnswers) {
+    var statusDiv = document.getElementById("send-status");
+    var submitBtn = document.getElementById("submit-btn");
+
+    if (sent) {
+        statusDiv.className = "error";
+        statusDiv.textContent = "Результат уже был отправлен ранее.";
+        statusDiv.style.display = "block";
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = "0.5";
+    statusDiv.className = "sending";
+    statusDiv.textContent = "Отправка результата...";
+    statusDiv.style.display = "block";
+
+    var now = new Date();
+    var dateStr = now.toLocaleDateString("ru-RU") + " " + now.toLocaleTimeString("ru-RU");
+
+    var wrongStr = wrongAnswers.length > 0 ? wrongAnswers.join(", ") : "нет";
+
+    var payload = {
+        "Имя": studentName,
+        "Email": studentEmail,
+        "Правильных ответов": score + " из " + questions.length,
+        "Процент": percentage + "%",
+        "Статус": status,
+        "Ошибки (вопросы)": wrongStr,
+        "Дата": dateStr,
+        "_subject": "Результат экзамена: " + studentName,
+        "_replyto": studentEmail
+    };
+
+    fetch(FORMSPREE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(function (response) {
+        if (response.ok) {
+            sent = true;
+            statusDiv.className = "success";
+            statusDiv.textContent = "Результат отправлен! Проверьте почту.";
+        } else {
+            throw new Error("Server returned " + response.status);
+        }
+    })
+    .catch(function () {
+        statusDiv.className = "error";
+        statusDiv.textContent = "Не удалось отправить результат. Попробуйте обновить страницу и пройти тест снова.";
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = "1";
+    });
+}

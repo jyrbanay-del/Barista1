@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Интерактивный тест для бариста: проверь свои знания о кофе, экстракции, молоке и латте-арте">
-    <meta name="keywords" content="бариста, тест, кофе, эспрессо, капучино, латте-арт">
     <title>Barista1 - Тест для бариста: От зерна до чашки</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -12,9 +11,27 @@
 
 <div class="container">
     <h1>ТЕСТ ДЛЯ БАРИСТА: &laquo;ОТ ЗЕРНА ДО ЧАШКИ&raquo;</h1>
-    <form id="quiz-form"></form>
-    <button id="submit-btn" type="button">Проверить ответы</button>
-    <div id="result"></div>
+
+    <!-- Блок регистрации ученика -->
+    <div id="student-form">
+        <div class="form-group">
+            <label for="student-name">Ваше имя и фамилия</label>
+            <input type="text" id="student-name" placeholder="Иван Иванов" required>
+        </div>
+        <div class="form-group">
+            <label for="student-email">Ваш email</label>
+            <input type="email" id="student-email" placeholder="ivan@example.com" required>
+        </div>
+        <button id="start-btn" type="button">Начать тест</button>
+    </div>
+
+    <!-- Блок теста (скрыт до нажатия "Начать тест") -->
+    <div id="quiz-section" style="display: none;">
+        <form id="quiz-form"></form>
+        <button id="submit-btn" type="button">Проверить ответы</button>
+        <div id="result"></div>
+        <div id="send-status"></div>
+    </div>
 </div>
 
 <script src="js/quiz.js"></script>
