@@ -1,333 +1,434 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Тест для бариста ☕</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:#0b0b0e;color:#e8e6e3;min-height:100vh}
-.hero{background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);padding:60px 20px 40px;text-align:center;position:relative;overflow:hidden;border-bottom:3px solid #e94560}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 50%,rgba(233,69,96,.15),transparent 50%),radial-gradient(circle at 70% 50%,rgba(83,144,217,.1),transparent 50%)}
-.hero h1{font-size:clamp(32px,6vw,56px);font-weight:900;background:linear-gradient(135deg,#e94560,#f5a623);-webkit-background-clip:text;-webkit-text-fill-color:transparent;position:relative;letter-spacing:-1px}
-.hero p{color:#8a8fa3;margin-top:10px;font-size:14px;position:relative}
-.hero .badge{display:inline-block;background:rgba(233,69,96,.2);color:#e94560;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:12px;position:relative}
-.container{max-width:760px;margin:0 auto;padding:24px 16px 60px}
-
-/* --- Форма регистрации --- */
-#student-form{background:#13141a;border:1px solid #1e1f2b;border-radius:14px;padding:24px;margin-bottom:20px}
-#student-form h2{font-size:18px;font-weight:700;margin-bottom:16px;color:#e8e6e3}
-.form-row{margin-bottom:14px}
-.form-row label{display:block;font-size:13px;font-weight:600;color:#8a8fa3;margin-bottom:6px}
-.form-row input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #1e1f2b;background:#0d0e14;color:#e8e6e3;font-size:14px;font-family:'Inter',sans-serif;transition:border-color .15s}
-.form-row input:focus{outline:none;border-color:#e94560}
-.form-row input.error{border-color:#e74c3c}
-#start-btn{display:block;width:100%;padding:16px;border:none;border-radius:12px;background:linear-gradient(135deg,#e94560,#f5a623);color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:.2s;font-family:'Inter',sans-serif}
-#start-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(233,69,96,.3)}
-
-/* --- Тест --- */
-#quiz-section{display:none}
-.q-block{background:#13141a;border:1px solid #1e1f2b;border-radius:14px;padding:20px 22px;margin-bottom:14px;transition:.2s}
-.q-block:hover{border-color:#2a2b3d}
-.q-num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#e94560,#f5a623);color:#fff;font-size:12px;font-weight:700;margin-right:10px;flex-shrink:0}
-.q-title{display:flex;align-items:center;gap:6px;font-weight:600;font-size:15px;color:#e8e6e3;margin-bottom:12px}
-.q-title .trick{background:#e94560;color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;margin-left:6px}
-.options{display:flex;flex-direction:column;gap:6px}
-.opt{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;border:1px solid #1e1f2b;background:#0d0e14;cursor:pointer;transition:.15s;font-size:14px;color:#b0b3be}
-.opt:hover{border-color:#e94560;background:rgba(233,69,96,.06)}
-.opt .radio{width:16px;height:16px;border-radius:50%;border:2px solid #2a2b3d;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
-.opt .radio::after{content:'';width:8px;height:8px;border-radius:50%;background:#e94560;opacity:0;transition:.15s}
-.opt.active{border-color:#e94560;background:rgba(233,69,96,.08)}
-.opt.active .radio{border-color:#e94560}
-.opt.active .radio::after{opacity:1}
-.opt.correct{border-color:#2ecc71!important;background:rgba(46,204,113,.08)!important}
-.opt.correct .radio{border-color:#2ecc71!important}
-.opt.correct .radio::after{background:#2ecc71!important;opacity:1!important}
-.opt.wrong{border-color:#e74c3c!important;background:rgba(231,76,60,.08)!important}
-.opt.wrong .radio{border-color:#e74c3c!important}
-.opt.wrong .radio::after{background:#e74c3c!important;opacity:1!important}
-.opt.disabled{pointer-events:none}
-.expl{display:none;margin-top:10px;padding:10px 14px;border-radius:8px;background:rgba(245,166,35,.06);border-left:3px solid #f5a623;font-size:13px;color:#9a9eb0;line-height:1.5}
-.expl strong{color:#f5a623}
-#submit{display:block;width:100%;padding:16px;border:none;border-radius:12px;background:linear-gradient(135deg,#e94560,#f5a623);color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:.2s;margin-top:20px;font-family:'Inter',sans-serif}
-#submit:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(233,69,96,.3)}
-#submit:active{transform:translateY(0)}
-#result{display:none;margin-top:24px;padding:30px;border-radius:14px;text-align:center;background:linear-gradient(135deg,#13141a,#1a1a2e);border:1px solid #1e1f2b}
-#result .score{font-size:clamp(42px,8vw,72px);font-weight:900;background:linear-gradient(135deg,#e94560,#f5a623);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-#result .label{color:#8a8fa3;font-size:14px;margin-top:4px}
-#result .msg{font-size:18px;font-weight:600;margin-top:12px}
-#result .msg.perfect{color:#2ecc71}
-#result .msg.great{color:#f5a623}
-#result .msg.ok{color:#8a8fa3}
-#result .msg.bad{color:#e74c3c}
-.progress-wrap{position:sticky;top:0;z-index:10;background:#0b0b0e;padding:8px 0 4px}
-.progress-bar{height:4px;background:#1e1f2b;border-radius:4px;overflow:hidden}
-.progress-fill{height:100%;width:0;background:linear-gradient(90deg,#e94560,#f5a623);border-radius:4px;transition:width .4s ease}
-.progress-text{display:flex;justify-content:space-between;font-size:11px;color:#5a5d6e;margin-top:4px;font-weight:500}
-
-/* --- Статус отправки --- */
-#send-status{display:none;margin-top:16px;padding:14px;border-radius:10px;font-size:14px;text-align:center;font-weight:600}
-#send-status.success{display:block;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.3);color:#2ecc71}
-#send-status.error{display:block;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);color:#e74c3c}
-#send-status.sending{display:block;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);color:#f5a623}
-
-@media(max-width:600px){.q-block{padding:16px}.hero{padding:40px 16px 28px}}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест для бариста: От зерна до чашки</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f1ea;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #6f4e37;
+            border-bottom: 2px solid #6f4e37;
+            padding-bottom: 15px;
+        }
+        /* Форма регистрации */
+        #student-form {
+            max-width: 400px;
+            margin: 20px auto 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #6f4e37;
+        }
+        .form-group input.error {
+            border-color: #dc3545;
+        }
+        #start-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #6f4e37;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #start-btn:hover {
+            background-color: #5a3e2c;
+        }
+        /* Тест */
+        #quiz-section {
+            display: none;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #e0d6c8;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        .option {
+            display: block;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .option:hover {
+            background-color: #f9f5f0;
+            border-color: #c8a27c;
+        }
+        .option input {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        .option.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .option.incorrect {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .option.disabled {
+            pointer-events: none;
+        }
+        #submit-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #6f4e37;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        #submit-btn:hover {
+            background-color: #5a3e2c;
+        }
+        #result {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+        .explanation {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #6f4e37;
+            display: none;
+        }
+        /* Статус отправки */
+        #send-status {
+            text-align: center;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 0.95em;
+            display: none;
+        }
+        #send-status.success {
+            display: block;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        #send-status.error {
+            display: block;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        #send-status.sending {
+            display: block;
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 20px 15px; }
+        }
+    </style>
 </head>
 <body>
 
-<!-- HERO -->
-<div class="hero">
-  <div class="badge">☕ 20 вопросов</div>
-  <h1>Тест для бариста</h1>
-  <p>Знание кофе и технологий · С подвохами</p>
-</div>
-
 <div class="container">
+    <h1>ТЕСТ ДЛЯ БАРИСТА: «ОТ ЗЕРНА ДО ЧАШКИ»</h1>
 
-  <!-- ФОРМА РЕГИСТРАЦИИ -->
-  <div id="student-form">
-    <h2>Перед началом теста</h2>
-    <div class="form-row">
-      <label for="student-name">Ваше имя и фамилия</label>
-      <input type="text" id="student-name" placeholder="Иван Иванов">
-    </div>
-    <div class="form-row">
-      <label for="student-email">Ваш email</label>
-      <input type="email" id="student-email" placeholder="ivan@example.com">
-    </div>
-    <button id="start-btn" type="button">Начать тест →</button>
-  </div>
-
-  <!-- ТЕСТ -->
-  <div id="quiz-section">
-    <div class="progress-wrap">
-      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-      <div class="progress-text"><span>0 / 20</span><span id="doneLabel">не начат</span></div>
+    <!-- Форма регистрации -->
+    <div id="student-form">
+        <div class="form-group">
+            <label for="student-name">Ваше имя и фамилия</label>
+            <input type="text" id="student-name" placeholder="Иван Иванов">
+        </div>
+        <div class="form-group">
+            <label for="student-email">Ваш email</label>
+            <input type="email" id="student-email" placeholder="ivan@example.com">
+        </div>
+        <button id="start-btn" type="button">Начать тест</button>
     </div>
 
-    <div id="quiz"></div>
-
-    <button id="submit">Проверить ответы →</button>
-
-    <div id="result">
-      <div class="score" id="scoreNum">0</div>
-      <div class="label">из 20 правильных</div>
-      <div class="msg" id="scoreMsg"></div>
+    <!-- Тест -->
+    <div id="quiz-section">
+        <form id="quiz-form"></form>
+        <button id="submit-btn">Проверить ответы</button>
+        <div id="result"></div>
+        <div id="send-status"></div>
     </div>
-
-    <div id="send-status"></div>
-  </div>
-
 </div>
 
 <script>
-// ============================================
-// НАСТРОЙКИ — ВСТАВЬ СЮДА СВОЙ URL FORMSPREE
-// ============================================
 var FORMSPREE_URL = "https://formspree.io/f/xrewerad";
 
-// ============================================
-// ДАННЫЕ ТЕСТА
-// ============================================
-var q = [
-{t:"Какая температура идеальна для взбивания молока, чтобы сохранить сладость и структуру?",o:["50-55°C","60-65°C","70-75°C","80-85°C"],c:1,e:"При 60-65°C лактоза максимально сладкая. Выше 70°C — белки денатурируют, сладость уходит, появляется вкус кипяченого молока."},
-{t:"Какая температура эспрессо в чашке считается правильной?",o:["60-65°C","70-75°C","85-90°C","95-100°C"],c:1,e:"Эспрессо не обжигает рот при 70-75°C. Если горячее — вода в группе перегрета."},
-{t:"Стандартная температура воды в группе эспрессо-машины?",o:["85-88°C","90-96°C","98-100°C","100-105°C"],c:1,e:"90-96°C — золотой стандарт SCA (Спешиалти Кофи Ассоциейшн)."},
-{t:"Сколько времени должна занимать экстракция двойного эспрессо?",o:["10-15 секунд","25-30 секунд","40-45 секунд","60 секунд"],c:1,e:"Классика: 25-30 секунд для 36-40 грамм напитка из 18-20 грамм помола."},
-{t:"Что произойдет с молоком, если нагреть выше 70°C?",o:["Оно станет слаще — лактоза карамелизуется","Потеряет сладость, белки денатурируют, вкус кипяченого молока","Пенка станет плотнее и глянцевой","Ничего не изменится"],c:1,e:"Подвох: новички думают, что горячее = слаще. Но при перегреве белки сворачиваются, текстура становится пористой, вкус — пустым и горьким.",w:true},
-{t:"Ботанически кофейное зерно — это...",o:["Орех","Боб","Семечко ягоды (костянки)","Клубень"],c:2,e:"Подвох: кофе — это красная ягода (вишня), а зерно — семечко внутри. Не боб и не орех.",w:true},
-{t:"В каком сорте кофе больше всего кофеина?",o:["100% Арабика","100% Робуста","Смесь 80/20","Либерика"],c:1,e:"В робусте почти в 2 раза больше кофеина (2.7% vs 1.5%). Природа — как пестицид от насекомых."},
-{t:"Какой обжарке соответствует больше кофеина на единицу веса?",o:["Светлая","Средняя","Темная","Кофеин не зависит от обжарки"],c:0,e:"Подвох: темная обжарка ≠ больше бодрости. При темной обжарке зерно теряет влагу и вес. В 18г светлой обжарки кофеина физически больше, чем в 18г темной.",w:true},
-{t:"Что такое 'ченнелинг' (channeling)?",o:["Переливание из питчера в чашку","Промывка группы","Прорыв воды через слабые места таблетки","Смешивание эспрессо с водой"],c:2,e:"Из-за неровного темперования вода находит путь наименьшего сопротивления. Часть кофе не экстрагируется, часть переэкстрагируется."},
-{t:"Какой помол нужен для френч-пресса?",o:["Мелкий (как на эспрессо)","Средне-мелкий","Крупный (как морская соль)"],c:2,e:"Френч-пресс — метод иммерсии. Мелкий помол даст горечь и крошки в чашке."},
-{t:"Эспрессо течет 15 секунд, водянистый и кислый. В чем ошибка?",o:["Помол слишком мелкий","Помол слишком крупный","Темперовка слишком сильная","Слишком много кофе"],c:1,e:"Вода пролетает слишком быстро — недоэкстракция. Делаем помол мельче."},
-{t:"Можно ли взбивать повторно остывшее молоко?",o:["Да, сэкономит время","Нет — белки денатурированы","Да, если добавить 50/50 свежего","Да, на минимальной мощности"],c:1,e:"Подвох: повторно взбитое молоко теряет структуру, пенка опадает, вкус становится плохим. Это моветон.",w:true},
-{t:"Какой напиток: двойной эспрессо + плотная микропенка ~1 см?",o:["Латте","Флэт Уайт","Американо","Раф"],c:1,e:"Флэт уайт — акцент на кофе, минимум пены. В латте пенки 1.5-2 см и больше молока."},
-{t:"Зачем продувать пар перед взбиванием?",o:["Убрать конденсат (воду)","Нагреть питчер","Напугать гостей","Проверить давление"],c:0,e:"В паровике скапливается конденсат. Если не продуть — вода разбавит молоко первые секунды."},
-{t:"Что такое крема (crema)?",o:["Сливки в эспрессо","Эмульсия масел, CO2 и воды","Пенка из яичного белка","Слой пережженных частиц"],c:1,e:"Показатель свежести обжарки и правильной экстракции."},
-{t:"Стандартное давление для экстракции эспрессо?",o:["3 бар","9 бар","15 бар","20 бар"],c:1,e:"9 бар — стандарт, под который настроены помпы и клапаны."},
-{t:"Что такое РЕСТРЕТТО?",o:["Эспрессо с большим количеством воды","Эспрессо с меньшим количеством воды","Эспрессо без кофеина","Эспрессо с сиропом"],c:1,e:"Подвох: 'restricted' = ограниченный. Меньше воды = более концентрированный, плотный, сладкий напиток.",w:true},
-{t:"Если к обеду влажность и температура в кофейне растут, что делать с помолом?",o:["Крупнее","Мельче","Не менять","Увеличить дозу"],c:0,e:"При высокой влажности кофе набухает сильнее. Если не сделать помол крупнее — эспрессо перестанет течь."},
-{t:"Историческая родина кофе?",o:["Бразилия","Колумбия","Эфиопия","Вьетнам"],c:2,e:"Регион Каффа в Эфиопии — там впервые обнаружили кофейные деревья."},
-{t:"Американо — это...",o:["Эспрессо + горячая вода","Горячая вода + эспрессо","Фильтр-кофе с водой","Зависит от порядка (А и Б)"],c:3,e:"Подвох: порядок важен! Влить эспрессо в воду (лонг блэк) — крема цела, вкус слаще. Влить воду в эспрессо — крема разрушится.",w:true}
-];
-
-// ============================================
-// СОСТОЯНИЕ
-// ============================================
 var studentName = "";
 var studentEmail = "";
-var answers = new Array(q.length).fill(null);
 var sent = false;
 
-// ============================================
-// ИНИЦИАЛИЗАЦИЯ
-// ============================================
+var questions = [
+    {
+        text: "1. Какая идеальная температура взбитого молока для классического капучино?",
+        options: ["А) 45–50 °C", "Б) 55–65 °C", "В) 70–75 °C", "Г) 80–85 °C"],
+        correct: 1,
+        explanation: "Оптимально 60°C. При такой температуре лактоза максимально сладкая, а белки не разрушены."
+    },
+    {
+        text: "2. Какая температура эспрессо в чашке сразу после приготовления считается нормой?",
+        options: ["А) 60–65 °C", "Б) 70–75 °C", "В) 85–90 °C", "Г) 95–100 °C"],
+        correct: 1,
+        explanation: "Эспрессо варится при 90–96 °C, но проходя через группу и попадая в чашку, он остывает до 70–75 °C."
+    },
+    {
+        text: "3. Что произойдет с молоком, если его нагреть выше 70 °C при взбивании?",
+        options: ["А) Оно станет слаще за счет карамелизации лактозы.", "Б) Белки денатурируют (свернутся), лактоза распадется, молоко начнет горчить и потеряет сладость.", "В) Оно станет более густым и будет лучше держать форму для латте-арта.", "Г) Ничего не изменится, просто будет горячее."],
+        correct: 1,
+        explanation: "Выше 70 °C молоко «сгорает», становится водянистым, сладость пропадает, появляется вкус кипяченого молока."
+    },
+    {
+        text: "4. Вопрос с подвохом: Бариста забыл взвесить дозу кофе в портафильтре, но прессует и включает экстракцию. Эспрессо вытекает за 15 секунд, бледный и водянистый. В чем главная причина?",
+        options: ["А) Температура воды в кофемашине слишком высокая.", "Б) Давление помпы упало ниже 9 бар.", "В) Кофе в холдере слишком мало (недозасып).", "Г) Кофе смололи слишком крупно."],
+        correct: 2,
+        explanation: "Подвох: если забыть взвесить кофе, доза будет нестабильной. Быстрый пролив и водянистость в первую очередь указывают на ошибку в дозировке (хотя крупный помол тоже может быть причиной, недозасып — прямое следствие невзвешивания)."
+    },
+    {
+        text: "5. Вопрос с подвохом: Клиент просит сделать ему эспрессо «совсем без горечи, чтобы был сладкий». Какой из вариантов лучший?",
+        options: ["А) Уменьшить дозу кофе на 2 грамма.", "Б) Снять пенку (крема) с готового эспрессо.", "В) Остановить экстракцию на 20 секундах, не дожидаясь 25-30.", "Г) Посоветовать ему другой напиток, так как эспрессо без горечи не существует."],
+        correct: 3,
+        explanation: "Эспрессо — это баланс. Без горечи (которая дает экстракция в конце) эспрессо будет невыносимо кислым. Лучше предложить фильтр-кофе или напиток с молоком."
+    },
+    {
+        text: "6. Каков классический вес выхода (yield) двойного эспрессо при закладке 18 грамм кофе?",
+        options: ["А) 18 грамм", "Б) 25 грамм", "В) 36 грамм", "Г) 50 грамм"],
+        correct: 2,
+        explanation: "Стандартное соотношение 1:2. 18г кофе = 36г напитка в чашке за 25-30 секунд."
+    },
+    {
+        text: "7. Вопрос с подвохом: Что главное в правильной темперовке (утрамбовке) кофейной таблетки?",
+        options: ["А) Приложить усилие ровно 15 кг.", "Б) Приложить усилие ровно 30 кг.", "В) Обеспечить абсолютно ровную и горизонтальную поверхность таблетки.", "Г) Сделать темперовку в два подхода: сначала легко, потом сильно."],
+        correct: 2,
+        explanation: "Усилие не имеет значения после 2-3 кг. Главное — ровность, иначе вода под давлением в 9 бар пробьет кривую таблетку сбоку (channeling)."
+    },
+    {
+        text: "8. Сколько кофеина в стандартной чашке (200 мл) фильтр-кофе по сравнению с двойным эспрессо (60 мл)?",
+        options: ["А) В фильтр-кофе кофеина меньше, так как он менее крепкий на вкус.", "Б) Кофеина примерно одинаково.", "В) В фильтр-кофе кофеина значительно больше.", "Г) В эспрессо кофеина больше, так как это концентрированный напиток."],
+        correct: 2,
+        explanation: "Из-за длительного контакта воды с кофе (3-5 минут) в фильтр экстрагируется гораздо больше кофеина (150-200 мг), чем в эспрессо (80-100 мг)."
+    },
+    {
+        text: "9. Почему свежеобжаренный кофе (1-2 дня после обжарки) может дать рваную струйку при экстракции?",
+        options: ["А) В зерне еще много углекислого газа (СО2), который мешает воде равномерно проходить через таблетку.", "Б) Зерно еще слишком влажное.", "В) Масло еще не вышло на поверхность зерна.", "Г) Кофемолка не настроена на такой помол."],
+        correct: 0,
+        explanation: "Свежеобжаренному кофе нужно «дегазироваться» 7-14 дней. Иначе СО2 выталкивает воду, создавая каналы прожига."
+    },
+    {
+        text: "10. Чем отличается флэт уайт (Flat White) от капучино?",
+        options: ["А) Во флэт уайт добавляют сироп, а в капучино — нет.", "Б) Во флэт уайте двойной ристретто/эспрессо и меньше густой пены (около 0.5 см).", "В) Во флэт уайте используется только овсяное молоко.", "Г) Капучино подается в стеклянном стакане, а флэт уайт в керамике."],
+        correct: 1,
+        explanation: "Во флэт уайте акцент на кофейном вкусе, пены минимум. В капучино пены 1.5-2 см."
+    },
+    {
+        text: "11. Вопрос с подвохом: Эспрессо начал литься тонкой, очень темной струйкой с самого начала. Что это значит?",
+        options: ["А) Экстракция идет идеально.", "Б) Кофейная таблетка имеет канал прожига (channeling) — вода нашла дырку.", "В) Помол слишком крупный.", "Г) Кофемашина перегрелась."],
+        correct: 1,
+        explanation: "Если струйка темная с самого начала, вода не проходит через весь кофе равномерно, а пробивает путь наименьшего сопротивления."
+    },
+    {
+        text: "12. В чем разница между арабикой и робустой?",
+        options: ["А) Арабика более горькая и содержит в 2 раза больше кофеина.", "Б) Робуста более горькая, землистая, содержит больше кофеина и дает больше крема.", "В) Разницы нет, это один и тот же вид растения.", "Г) Робуста всегда сладкая с ягодными нотами."],
+        correct: 1,
+        explanation: "Арабика — сладкая, кислая, сложная. Робуста — горькая, в ней в 2 раза больше кофеина, дает густую пенку."
+    },
+    {
+        text: "13. Что нужно сделать в первую очередь, если эспрессо водянистый, бледный и течет 15 секунд?",
+        options: ["А) Изменить помол в сторону «мельче».", "Б) Изменить помол в сторону «крупнее».", "В) Увеличить давление темперовки.", "Г) Добавить больше кофе в холдер."],
+        correct: 0,
+        explanation: "Быстрое течение = недоэкстракция. Делаем помол мельче, чтобы создать сопротивление воде."
+    },
+    {
+        text: "14. Вопрос с подвохом: Клиент жалуется, что американо «мутный» и с пенкой, хотя просил «просто черный кофе». Почему?",
+        options: ["А) Бариста налил кипяток из чайника с накипью.", "Б) Это натуральные кофейные масла и крема, которые поднимаются при добавлении воды.", "В) Зерно было слишком темной обжарки.", "Г) Фильтр в кофемашине порвался."],
+        correct: 1,
+        explanation: "«Мутность» — это эфирные масла и СО2. Клиент, привыкший к растворимому кофе, может этого не знать."
+    },
+    {
+        text: "15. Как часто нужно чистить группу (холдер) от кофейных масел с помощью слепого сита?",
+        options: ["А) Раз в неделю.", "Б) В конце каждой рабочей смены.", "В) Раз в месяц.", "Г) Только когда кофе начинает горчить."],
+        correct: 1,
+        explanation: "Кофейные масла прогоркают очень быстро. Чистка бэкофлешем обязательна каждый день в конце смены."
+    }
+];
+
 document.addEventListener("DOMContentLoaded", function() {
-  document.getElementById("start-btn").addEventListener("click", startQuiz);
-  document.getElementById("submit").addEventListener("click", submitQuiz);
+    document.getElementById("start-btn").addEventListener("click", startQuiz);
+    document.getElementById("submit-btn").addEventListener("click", checkAnswers);
 });
 
 function startQuiz() {
-  var nameInput = document.getElementById("student-name");
-  var emailInput = document.getElementById("student-email");
-  var valid = true;
+    var nameInput = document.getElementById("student-name");
+    var emailInput = document.getElementById("student-email");
+    var valid = true;
 
-  if (!nameInput.value.trim()) { nameInput.classList.add("error"); valid = false; }
-  else { nameInput.classList.remove("error"); }
+    if (!nameInput.value.trim()) { nameInput.classList.add("error"); valid = false; }
+    else { nameInput.classList.remove("error"); }
 
-  if (!emailInput.value.trim() || !emailInput.value.includes("@")) { emailInput.classList.add("error"); valid = false; }
-  else { emailInput.classList.remove("error"); }
+    if (!emailInput.value.trim() || !emailInput.value.includes("@")) { emailInput.classList.add("error"); valid = false; }
+    else { emailInput.classList.remove("error"); }
 
-  if (!valid) return;
+    if (!valid) return;
 
-  studentName = nameInput.value.trim();
-  studentEmail = emailInput.value.trim();
+    studentName = nameInput.value.trim();
+    studentEmail = emailInput.value.trim();
 
-  document.getElementById("student-form").style.display = "none";
-  document.getElementById("quiz-section").style.display = "block";
+    document.getElementById("student-form").style.display = "none";
+    document.getElementById("quiz-section").style.display = "block";
 
-  renderQuiz();
-}
-
-function renderQuiz() {
-  var quiz = document.getElementById("quiz");
-
-  q.forEach(function(item, i) {
-    var div = document.createElement("div");
-    div.className = "q-block";
-    var trick = item.w ? ' <span class="trick">С подвохом</span>' : '';
-    var html = '<div class="q-title"><span class="q-num">' + (i+1) + '</span>' + item.t + trick + '</div><div class="options">';
-    item.o.forEach(function(opt, j) {
-      html += '<label class="opt" data-q="' + i + '" data-v="' + j + '"><span class="radio"></span>' + opt + '</label>';
+    var form = document.getElementById("quiz-form");
+    questions.forEach(function(q, qIndex) {
+        var html = '<div class="question-block"><div class="question-text">' + q.text + '</div>';
+        q.options.forEach(function(opt, oIndex) {
+            html += '<label class="option"><input type="radio" name="q' + qIndex + '" value="' + oIndex + '"> ' + opt + '</label>';
+        });
+        html += '<div class="explanation" id="explanation-' + qIndex + '"><strong>Объяснение:</strong> ' + q.explanation + '</div></div>';
+        form.innerHTML += html;
     });
-    html += '</div><div class="expl" id="expl-' + i + '"><strong>Ответ:</strong> ' + item.o[item.c] + '. ' + item.e + '</div>';
-    div.innerHTML = html;
-    quiz.appendChild(div);
-  });
+}
 
-  document.querySelectorAll(".opt").forEach(function(el) {
-    el.addEventListener("click", function() {
-      if (this.classList.contains("disabled")) return;
-      var qIdx = parseInt(this.dataset.q);
-      var val = parseInt(this.dataset.v);
-      var parent = this.closest(".options");
-      parent.querySelectorAll(".opt").forEach(function(o) { o.classList.remove("active"); });
-      this.classList.add("active");
-      answers[qIdx] = val;
-      updateProgress();
+function checkAnswers() {
+    var score = 0;
+    var wrongList = [];
+
+    questions.forEach(function(q, qIndex) {
+        var options = document.querySelectorAll('input[name="q' + qIndex + '"]');
+        document.getElementById("explanation-" + qIndex).style.display = "block";
+
+        options.forEach(function(opt, oIndex) {
+            var label = opt.parentElement;
+            label.classList.add("disabled");
+            label.classList.remove("correct", "incorrect");
+            if (opt.checked) {
+                if (oIndex === q.correct) { label.classList.add("correct"); score++; }
+                else { label.classList.add("incorrect"); options[q.correct].parentElement.classList.add("correct"); wrongList.push(qIndex + 1); }
+            }
+        });
     });
-  });
+
+    var pct = Math.round((score / questions.length) * 100);
+    var passed = pct >= 70;
+    var status = passed ? "СДАН" : "НЕ СДАН";
+    var msg = pct === 100 ? "Идеально! Вы гуру кофемания!" : pct >= 70 ? "Отличный результат! Вы знаете свое дело." : pct >= 50 ? "Неплохо, но есть куда расти." : "Нужно подучить теорию.";
+
+    var result = document.getElementById("result");
+    result.style.display = "block";
+    result.innerHTML = "Ваш результат: <span style='color:#6f4e37;'>" + score + "</span> из <span style='color:#6f4e37;'>" + questions.length + "</span> (" + pct + "%)<br><br><strong>Статус: " + status + "</strong><br><br>" + msg;
+    result.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    sendResult(score, pct, status, wrongList);
 }
 
-function updateProgress() {
-  var answered = answers.filter(function(a) { return a !== null; }).length;
-  var pct = (answered / q.length) * 100;
-  document.getElementById("progressFill").style.width = pct + "%";
-  document.querySelector(".progress-text span:first-child").textContent = answered + " / " + q.length;
-  document.getElementById("doneLabel").textContent = answered === 0 ? "не начат" : answered === q.length ? "все ответили!" : answered + " из " + q.length;
-}
-
-// ============================================
-// ПРОВЕРКА ОТВЕТОВ
-// ============================================
-function submitQuiz() {
-  var unanswered = answers.some(function(a) { return a === null; });
-  if (unanswered) { if (!confirm("Не на все вопросы ответили. Показать результат?")) return; }
-
-  var score = 0;
-  var wrongList = [];
-
-  q.forEach(function(item, i) {
-    var opts = document.querySelectorAll('.opt[data-q="' + i + '"]');
-    opts.forEach(function(o) { o.classList.add("disabled"); });
-    document.getElementById("expl-" + i).style.display = "block";
-    opts.forEach(function(o, j) {
-      o.classList.remove("active");
-      if (j === item.c) o.classList.add("correct");
-      else if (answers[i] === j) o.classList.add("wrong");
-    });
-    if (answers[i] === item.c) score++;
-    else wrongList.push(i + 1);
-  });
-
-  document.getElementById("submit").style.display = "none";
-  var res = document.getElementById("result");
-  res.style.display = "block";
-  document.getElementById("scoreNum").textContent = score;
-
-  var pct = Math.round((score / q.length) * 100);
-  var passed = pct >= 70;
-  var status = passed ? "СДАН" : "НЕ СДАН";
-  var msg = document.getElementById("scoreMsg");
-
-  if (pct === 100) { msg.textContent = "Идеально! Ты — легенда ☕"; msg.className = "msg perfect"; }
-  else if (pct >= 80) { msg.textContent = "Отлично! Ты профи 🔥"; msg.className = "msg great"; }
-  else if (pct >= 60) { msg.textContent = "Хорошо, но есть куда расти"; msg.className = "msg ok"; }
-  else { msg.textContent = "Стоит подучить теорию 📖"; msg.className = "msg bad"; }
-
-  res.scrollIntoView({ behavior: "smooth", block: "center" });
-  document.getElementById("progressFill").style.width = "100%";
-
-  sendResult(score, pct, status, wrongList);
-}
-
-// ============================================
-// ОТПРАВКА НА FORMSPREE
-// ============================================
 function sendResult(score, pct, status, wrongList) {
-  var statusDiv = document.getElementById("send-status");
+    var statusDiv = document.getElementById("send-status");
 
-  if (sent) {
-    statusDiv.className = "error";
-    statusDiv.textContent = "Результат уже был отправлен ранее.";
-    return;
-  }
-
-  statusDiv.className = "sending";
-  statusDiv.textContent = "Отправка результата...";
-  statusDiv.style.display = "block";
-
-  var now = new Date();
-  var dateStr = now.toLocaleDateString("ru-RU") + " " + now.toLocaleTimeString("ru-RU");
-  var wrongStr = wrongList.length > 0 ? wrongList.join(", ") : "нет";
-  var wrongQuestions = wrongList.map(function(num) {
-    return "Вопрос " + num + ": " + q[num-1].t;
-  }).join("\n");
-
-  var payload = {
-    "Имя": studentName,
-    "Email": studentEmail,
-    "Правильных ответов": score + " из " + q.length,
-    "Процент": pct + "%",
-    "Статус": status,
-    "Неправильные вопросы": wrongQuestions || "все верно",
-    "Дата": dateStr,
-    "_subject": "Результат экзамена: " + studentName + " — " + status,
-    "_replyto": studentEmail
-  };
-
-  fetch(FORMSPREE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  })
-  .then(function(response) {
-    if (response.ok) {
-      sent = true;
-      statusDiv.className = "success";
-      statusDiv.textContent = "✓ Результат отправлен! Проверьте почту.";
-    } else {
-      throw new Error("Server " + response.status);
+    if (sent) {
+        statusDiv.className = "error";
+        statusDiv.textContent = "Результат уже был отправлен ранее.";
+        return;
     }
-  })
-  .catch(function() {
-    statusDiv.className = "error";
-    statusDiv.textContent = "Не удалось отправить результат. Попробуйте обновить страницу.";
-  });
+
+    statusDiv.className = "sending";
+    statusDiv.textContent = "Отправка результата...";
+    statusDiv.style.display = "block";
+
+    var now = new Date();
+    var dateStr = now.toLocaleDateString("ru-RU") + " " + now.toLocaleTimeString("ru-RU");
+    var wrongQuestions = wrongList.map(function(num) {
+        return "Вопрос " + num + ": " + questions[num-1].text;
+    }).join("\n");
+
+    var payload = {
+        "Имя": studentName,
+        "Email": studentEmail,
+        "Правильных ответов": score + " из " + questions.length,
+        "Процент": pct + "%",
+        "Статус": status,
+        "Неправильные вопросы": wrongQuestions || "все верно",
+        "Дата": dateStr,
+        "_subject": "Результат экзамена: " + studentName + " — " + status,
+        "_replyto": studentEmail
+    };
+
+    fetch(FORMSPREE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(function(response) {
+        if (response.ok) {
+            sent = true;
+            statusDiv.className = "success";
+            statusDiv.textContent = "Результат отправлен! Проверьте почту.";
+        } else {
+            throw new Error("Server " + response.status);
+        }
+    })
+    .catch(function() {
+        statusDiv.className = "error";
+        statusDiv.textContent = "Не удалось отправить результат. Попробуйте обновить страницу.";
+    });
 }
 </script>
 </body>
