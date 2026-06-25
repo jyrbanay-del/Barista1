@@ -11,10 +11,10 @@
             --card-bg: #1e1e1e;
             --text-main: #ffffff;
             --text-muted: #b0b0b0;
-            --accent: #ff6b35; /* Оранжевый акцент */
+            --accent: #ff6b35;
             --accent-hover: #ff8555;
-            --correct: #00e676; /* Яркий зеленый */
-            --incorrect: #ff3d00; /* Яркий красный */
+            --correct: #00e676;
+            --incorrect: #ff3d00;
         }
 
         * {
@@ -45,13 +45,12 @@
             overflow: hidden;
         }
 
-        /* Прогресс-бар */
         .progress-bar-bg {
             width: 100%;
             height: 6px;
             background-color: #333;
             border-radius: 3px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             overflow: hidden;
         }
         .progress-bar-fill {
@@ -62,7 +61,14 @@
             border-radius: 3px;
         }
 
-        /* Экраны */
+        .timer-display {
+            text-align: right;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            font-variant-numeric: tabular-nums;
+        }
+
         .screen {
             display: none;
             flex-direction: column;
@@ -77,7 +83,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Анимация выезжающего вопроса */
         @keyframes slideInRight {
             from { transform: translateX(50px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -123,18 +128,10 @@
             cursor: pointer;
             transition: background-color 0.3s, transform 0.1s;
         }
-        .btn:hover {
-            background-color: var(--accent-hover);
-        }
-        .btn:active {
-            transform: scale(0.98);
-        }
-        .btn:disabled {
-            background-color: #555;
-            cursor: not-allowed;
-        }
+        .btn:hover { background-color: var(--accent-hover); }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { background-color: #555; cursor: not-allowed; }
 
-        /* Вопрос и варианты */
         .question-number {
             color: var(--accent);
             font-weight: bold;
@@ -164,10 +161,6 @@
             background-color: #333;
             border-color: #555;
         }
-        .option.selected {
-            border-color: var(--accent);
-            background-color: rgba(255, 107, 53, 0.1);
-        }
         .option.correct {
             border-color: var(--correct);
             background-color: rgba(0, 230, 118, 0.1);
@@ -179,19 +172,21 @@
             color: var(--incorrect);
         }
 
-        /* Результат */
-        #result-screen {
-            text-align: center;
-        }
+        #result-screen { text-align: center; }
         .score-text {
             font-size: 2.5rem;
             font-weight: bold;
-            margin: 20px 0;
+            margin: 10px 0;
             color: var(--accent);
         }
-        .result-message {
+        .time-text {
             font-size: 1.2rem;
             color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+        .result-message {
+            font-size: 1.1rem;
+            color: var(--text-main);
             margin-bottom: 30px;
         }
         .review-block {
@@ -208,9 +203,7 @@
             padding-bottom: 10px;
             border-bottom: 1px solid #3a3a3a;
         }
-        .review-item:last-child {
-            border-bottom: none;
-        }
+        .review-item:last-child { border-bottom: none; }
         .explanation {
             font-size: 0.9rem;
             color: #aaa;
@@ -228,30 +221,28 @@
 <body>
 
 <div class="app-container">
-    <!-- Прогресс бар -->
     <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress"></div>
     </div>
 
-    <!-- ЭКРАН 1: Ввод имени -->
     <div id="start-screen" class="screen active">
         <h1>Тест для бариста</h1>
-        <p class="description">Перед началом теста, пожалуйста, представьтесь.</p>
+        <p class="description">Вам предстоит ответить на 20 вопросов. Перед началом представьтесь.</p>
         <input type="text" id="user-name" placeholder="Ваше Имя">
         <input type="text" id="user-surname" placeholder="Ваша Фамилия">
         <button class="btn" id="start-btn">Начать тест</button>
     </div>
 
-    <!-- ЭКРАН 2: Вопросы -->
     <div id="quiz-screen" class="screen">
+        <div class="timer-display">Время: <span id="timer">00:00</span></div>
         <div id="question-container"></div>
         <button class="btn" id="next-btn" style="margin-top: 30px;" disabled>Далее</button>
     </div>
 
-    <!-- ЭКРАН 3: Результат -->
     <div id="result-screen" class="screen">
         <h1>Тест завершен!</h1>
         <div class="score-text" id="score-text"></div>
+        <div class="time-text" id="time-text"></div>
         <div class="result-message" id="result-message"></div>
         
         <div class="review-block" id="review-block"></div>
@@ -266,91 +257,121 @@
             text: "Какая идеальная температура взбитого молока для классического капучино?",
             options: ["45–50 °C", "55–65 °C", "70–75 °C", "80–85 °C"],
             correct: 1,
-            explanation: "Оптимально 60°C. Лактоза максимально сладкая, белки не разрушены."
+            explanation: "Оптимально 60°C. При такой температуре лактоза максимально сладкая, а белки не разрушены."
         },
         {
             text: "Какая температура эспрессо в чашке сразу после приготовления?",
-            options: ["60–65 °C", "70–75 °C", "85–90 °C", "95–100 °C"],
-            correct: 2,
-            explanation: "Варится при 90–96 °C, но в чашке остывает до 70–75 °C."
+            options: ["60–65 °C", "70–75 °C", "85–90 °C", "90–96 °C"],
+            correct: 3,
+            explanation: "Оптимальная температура воды при приготовлении эспрессо составляет 90–96 °C, что позволяет правильно экстрагировать вкус."
         },
         {
-            text: "Что произойдет с молоком, если нагреть его выше 70 °C?",
+            text: "Что произойдет с молоком, если нагреть его выше 70 °C при взбивании?",
             options: ["Станет слаще.", "Белки свернутся, молоко начнет горчить.", "Станет более густым.", "Ничего не изменится."],
             correct: 1,
-            explanation: "Молоко «сгорает», становится водянистым, сладость пропадает."
+            explanation: "Свыше 70 °C белки денатурируют, сладость пропадает, появляется вкус кипяченого молока."
         },
         {
-            text: "Бариста забыл взвесить кофе. Эспрессо вытек за 15 сек, бледный. Причина?",
-            options: ["Вода слишком горячая.", "Давление упало.", "Кофе слишком мало (недозасып).", "Помол слишком крупный."],
-            correct: 2,
-            explanation: "Быстрый пролив и водянистость указывают на нестабильную дозировку."
+            text: "Сколько кофеина останется в чашке, если приготовить её из декафеинового кофе?",
+            options: ["0%, кофеина нет вообще.", "Остается около 2-3%.", "Около 10%.", "Около 50%."],
+            correct: 1,
+            explanation: "Декофеинизация удаляет 97-99% кофеина. Абсолютного нуля достичь невозможно."
         },
         {
-            text: "Клиент просит эспрессо «совсем без горечи». Лучший вариант?",
-            options: ["Уменьшить дозу.", "Снять крема.", "Остановить экстракцию раньше.", "Посоветовать другой напиток."],
+            text: "Клиент просит эспрессо «совсем без горечи, чтобы был сладкий». Лучший вариант?",
+            options: ["Уменьшить дозу кофе.", "Снять крема.", "Остановить экстракцию раньше.", "Посоветовать другой напиток."],
             correct: 3,
-            explanation: "Без горечи эспрессо будет невыносимо кислым. Лучше предложить фильтр или молочный напиток."
+            explanation: "Эспрессо — это баланс. Без горечи он будет невыносимо кислым. Лучше предложить фильтр или напиток с молоком."
         },
         {
-            text: "Классический вес выхода двойного эспрессо при закладке 18 г?",
+            text: "Каков классический вес выхода двойного эспрессо при закладке 18 грамм кофе?",
             options: ["18 грамм", "25 грамм", "36 грамм", "50 грамм"],
             correct: 2,
-            explanation: "Стандартное соотношение 1:2."
+            explanation: "Стандартное соотношение 1:2. 18г кофе = 36г напитка за 25-30 секунд."
         },
         {
-            text: "Что главное в правильной темперовке?",
-            options: ["Усилие 15 кг.", "Усилие 30 кг.", "Абсолютно ровная поверхность.", "Два подхода."],
+            text: "Что главное в правильной темперовке (утрамбовке) кофейной таблетки?",
+            options: ["Постучать темпером по холдеру.", "Нажать и прокрутить темпер по таблетке.", "Абсолютно ровная и горизонтальная поверхность.", "Сделать темперовку в два подхода."],
             correct: 2,
-            explanation: "Усилие не важно после 2-3 кг. Главное — ровность таблетки."
+            explanation: "Усилие не важно после 2-3 кг. Главное — ровность, иначе вода под давлением пробьет таблетку сбоку."
         },
         {
-            text: "Где кофеина больше: в чашке фильтр-кофе (200 мл) или в двойном эспрессо?",
+            text: "Где кофеина больше: в чашке фильтр-кофе (200 мл) или в двойном эспрессо (60 мл)?",
             options: ["В фильтре меньше.", "Одинаково.", "В фильтре значительно больше.", "В эспрессо больше."],
             correct: 2,
-            explanation: "Из-за долгого контакта воды с кофе, в фильтре кофеина гораздо больше."
+            explanation: "Из-за долгого контакта воды с кофе (3-5 минут), в фильтре экстрагируется больше кофеина (150-200 мг)."
         },
         {
-            text: "Почему свежеобжаренный кофе (1-2 дня) дает рваную струйку?",
-            options: ["Много СО2 мешает воде.", "Зерно влажное.", "Масло не вышло.", "Молышок неисправен."],
+            text: "Почему свежеобжаренный кофе (1-2 дня) может дать рваную струйку при экстракции?",
+            options: ["Много СО2 (углерода) мешает воде.", "Зерно влажное.", "Масло не вышло.", "Кофемолка неисправна."],
             correct: 0,
-            explanation: "КО2 выталкивает воду, нужны 7-14 дней дегазации."
+            explanation: "Свежеобжаренному кофе нужна дегазация 7-14 дней. Иначе СО2 выталкивает воду, образуя каналы."
         },
         {
-            text: "Чем флэт уайт отличается от капучино?",
-            options: ["Там есть сироп.", "Двойной ристретто и меньше пены.", "Только овсяное молоко.", "Только посуда."],
+            text: "Чем флэт уайт (Flat White) отличается от капучино?",
+            options: ["Там есть сироп.", "Двойной эспрессо и меньше пены.", "Только овсяное молоко.", "Только посуда."],
             correct: 1,
-            explanation: "Во флэт уайте пены 0.5 см, в капучино 1.5-2 см."
+            explanation: "Во флэт уайте акцент на кофейном вкусе (двойной шот) и тонкий слой микропены. В капучино пены 1.5-2 см."
         },
         {
-            text: "Эспрессо льется тонкой темной струйкой с самого начала. Это значит, что:",
-            options: ["Все идеально.", "Образовался канал прожига (channeling).", "Помол крупный.", "Машина перегрелась."],
+            text: "Эспрессо льется тонкой, темной струйкой с самого начала. Это значит, что:",
+            options: ["Все идеально.", "Образовался канал прожига.", "Помол крупный.", "Машина перегрелась."],
             correct: 1,
-            explanation: "Вода нашла дырку в таблетке и пробивает её под давлением."
+            explanation: "Темная струйка с начала означает, что вода нашла дырку в таблетке и пробивает её под давлением."
         },
         {
-            text: "Разница между арабикой и робустой?",
-            options: ["Арабика горче.", "Робуста горче, в ней больше кофеина.", "Разницы нет.", "Робуста слаще."],
+            text: "В чем главная разница между арабикой и робустой?",
+            options: ["Арабика горче.", "Робуста горче, в ней больше кофеина и крема.", "Разницы нет.", "Робуста слаще."],
             correct: 1,
-            explanation: "В робусте в 2 раза больше кофеина, она горькая и дает много крема."
+            explanation: "В робусте в 2 раза больше кофеина, она горькая, землистая и дает густую пенку (крема)."
         },
         {
-            text: "Что делать, если эспрессо водянистый и течет 15 секунд?",
-            options: ["Сделать помол мельче.", "Сделать помол крупнее.", "Сильнее трамбовать.", "Добавить кофе."],
+            text: "Что нужно сделать, если эспрессо водянистый, бледный и течет 15 секунд (недоэкстракция)?",
+            options: ["Сделать помол мельче.", "Сделать помол крупнее.", "Сильнее трамбовать.", "Добавить больше воды."],
             correct: 0,
-            explanation: "Недоэкстракция. Мельче помол = больше сопротивление = правильное время."
+            explanation: "Быстрое течение = крупный помол. Делаем помол мельче, чтобы увеличить сопротивление воде."
         },
         {
-            text: "Клиент жалуется на «мутный» американо с пенкой. Почему?",
-            options: ["Кипяток с накипью.", "Это кофейные масла и крема.", "Темная обжарка.", "Порвался фильтр."],
+            text: "Клиент жалуется на «мутный» американо с пенкой. Почему так вышло?",
+            options: ["Вода была слишком жесткой.", "Это кофейные масла и крема.", "Темная обжарка.", "Кофейная гуща попала в чашку."],
             correct: 1,
-            explanation: "Мутность — это эфирные масла, знак хорошего кофе."
+            explanation: "Мутность и пенка — это эфирные масла и углекислый газ. Это признак свежего кофе, а не брака."
         },
         {
-            text: "Как часто чистить группу слепым ситом?",
-            options: ["Раз в неделю.", "Каждую смену.", "Раз в месяц.", "Когда начнет горчить."],
+            text: "Как часто нужно чистить группу (холдер) от масел с помощью слепого сита?",
+            options: ["Раз в неделю.", "В конце каждой рабочей смены.", "Раз в месяц.", "Когда кофе начнет горчить."],
             correct: 1,
-            explanation: "Масла прогоркают за день. Чистка обязательна каждый вечер."
+            explanation: "Кофейные масла прогоркают за один день. Чистка обязательна каждый вечер."
+        },
+        {
+            text: "Какое давление воды в группе эспрессо-машины считается стандартом?",
+            options: ["3 бар", "6 бар", "9 бар", "15 бар"],
+            correct: 2,
+            explanation: "Классический стандарт давления при экстракции эспрессо — 9 бар."
+        },
+        {
+            text: "Какие вкусовые ноты экстрагируются в эспрессо в самую последнюю очередь (в конце пролива)?",
+            options: ["Кислотность", "Сладость", "Горечь", "Тело (плотность)"],
+            correct: 2,
+            explanation: "Сначала экстрагируются кислоты, затем сахара (сладость/тело), и в самом конце — тяжелые горькие соединения."
+        },
+        {
+            text: "Что означает термин «Honey process» (медовая обработка) зерна?",
+            options: ["Зерно вымачивают в меде.", "Зерно сушат прямо с ягодой (натуральная обработка).", "Перед сушкой удаляют кожуру, но оставляют часть клейковины (мякоти).", "Зерно полируют до блеска."],
+            correct: 2,
+            explanation: "При медовой обработке снимают кожуру, но оставляют сахаристый слой (мицилаг/клейковину) на зерне во время сушки."
+        },
+        {
+            text: "Зачем бариста делает 'прогон' (пролив воды без холдера) перед тем, как вставить холдер?",
+            options: ["Чтобы согреть чашку.", "Чтобы промыть сито и стабилизировать температуру группы.", "Чтобы проверить давление помпы.", "Чтобы очистить паровик."],
+            correct: 1,
+            explanation: "Прогон смывает остатки старого кофе с душетки и стабилизирует температуру воды в группе перед экстракцией."
+        },
+        {
+            text: "Какая жирность молока обычно считается оптимальной для стабильного латте-арта и баланса вкуса?",
+            options: ["2.5%", "1.5%", "3.2% - 3.5%", "6%"],
+            correct: 2,
+            explanation: "Молоко 3.2-3.5% дает идеальный баланс сладости, текстуры пены и вкуса, не перебивая кофе."
         }
     ];
 
@@ -359,13 +380,35 @@
     let userName = "";
     let userSurname = "";
     let userAnswers = [];
+    
+    let startTime = 0;
+    let elapsedTime = 0;
+    let timerInterval = null;
 
     const startScreen = document.getElementById('start-screen');
     const quizScreen = document.getElementById('quiz-screen');
     const resultScreen = document.getElementById('result-screen');
     const progressBar = document.getElementById('progress');
 
-    // Кнопка старта
+    function startTimer() {
+        startTime = Date.now();
+        timerInterval = setInterval(() => {
+            elapsedTime = Date.now() - startTime;
+            document.getElementById('timer').innerText = formatTime(elapsedTime);
+        }, 1000);
+    }
+
+    function formatTime(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+    }
+
     document.getElementById('start-btn').addEventListener('click', () => {
         userName = document.getElementById('user-name').value.trim();
         userSurname = document.getElementById('user-surname').value.trim();
@@ -377,6 +420,7 @@
 
         startScreen.classList.remove('active');
         quizScreen.classList.add('active');
+        startTimer();
         showQuestion();
     });
 
@@ -384,12 +428,10 @@
         const q = questions[currentQuestion];
         const container = document.getElementById('question-container');
         
-        // Обновляем прогресс-бар
         progressBar.style.width = `${((currentQuestion) / questions.length) * 100}%`;
 
-        // Заполняем HTML с анимацией
         container.style.animation = 'none';
-        container.offsetHeight; /* trigger reflow */
+        container.offsetHeight;
         container.style.animation = 'slideInRight 0.4s ease-out';
 
         container.innerHTML = `
@@ -407,7 +449,6 @@
             grid.appendChild(div);
         });
 
-        // Скрываем кнопки ответов на старте вопроса
         document.getElementById('next-btn').disabled = true;
         document.getElementById('next-btn').innerText = currentQuestion === questions.length - 1 ? "Завершить тест" : "Далее";
     }
@@ -416,9 +457,7 @@
         const q = questions[currentQuestion];
         const allOptions = document.querySelectorAll('.option');
         
-        // Блокируем все варианты после выбора
         allOptions.forEach(opt => opt.style.pointerEvents = 'none');
-
         userAnswers.push(index);
 
         if (index === q.correct) {
@@ -426,15 +465,12 @@
             score++;
         } else {
             element.classList.add('incorrect');
-            // Подсвечиваем правильный ответ
             allOptions[q.correct].classList.add('correct');
         }
 
-        // Разблокируем кнопку "Далее"
         document.getElementById('next-btn').disabled = false;
     }
 
-    // Кнопка "Далее"
     document.getElementById('next-btn').addEventListener('click', () => {
         currentQuestion++;
         if (currentQuestion < questions.length) {
@@ -445,11 +481,15 @@
     });
 
     function showResults() {
+        stopTimer();
+        const finalTimeStr = formatTime(elapsedTime);
+
         quizScreen.classList.remove('active');
         resultScreen.classList.add('active');
         progressBar.style.width = `100%`;
 
         document.getElementById('score-text').innerText = `${score} / ${questions.length}`;
+        document.getElementById('time-text').innerText = `Время прохождения: ${finalTimeStr}`;
         
         let percentage = (score / questions.length) * 100;
         let msg = "";
@@ -460,7 +500,6 @@
 
         document.getElementById('result-message').innerText = msg;
 
-        // Генерация разбора ошибок
         const reviewBlock = document.getElementById('review-block');
         reviewBlock.innerHTML = '';
         questions.forEach((q, i) => {
@@ -476,16 +515,13 @@
             `;
         });
 
-        // Отправка на почту
-        sendEmail(msg);
+        sendEmail(msg, finalTimeStr);
     }
 
-    // Отправка письма
-    function sendEmail(message) {
+    function sendEmail(message, timeStr) {
         const fullName = `${userName} ${userSurname}`;
         const subject = `Тест бариста: ${fullName}`;
         
-        // Формируем детальный отчет для почты
         let answersReport = "Детали ответов:\n";
         questions.forEach((q, i) => {
             let isCorrect = userAnswers[i] === q.correct ? "Верно" : "Неверно";
@@ -497,13 +533,13 @@
             Имя: ${userName}
             Фамилия: ${userSurname}
             Результат: ${score} из ${questions.length}
+            Время прохождения: ${timeStr}
             Комментарий: ${message}
-            Время: ${new Date().toLocaleString('ru-RU')}
             
             ${answersReport}
         `;
 
-        fetch("https://formspree.io/f/xrewerad", {
+        fetch("https://formsubmit.co/ajax/Jyrbanay@mail.ru", {
             method: "POST",
             headers: { 
                 'Content-Type': 'application/json',
@@ -515,8 +551,9 @@
                 message: textMessage
             })
         })
-        .then(response => {
-            if (response.ok) {
+        .then(response => response.json())
+        .then(data => {
+            if (data.success === "true") {
                 document.getElementById('send-status').innerHTML = "✅ Результат отправлен администратору.";
                 document.getElementById('send-status').style.color = "var(--correct)";
             } else {
