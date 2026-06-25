@@ -530,40 +530,47 @@
             answersReport += `${i+1}. ${isCorrect} (Ответ: ${chosenAnswer})\n`;
         });
 
-        const textMessage = `
-            Имя: ${userName}
-            Фамилия: ${userSurname}
-            Результат: ${score} из ${questions.length}
-            Время прохождения: ${timeStr}
-            Комментарий: ${message}
-            
-            ${answersReport}
-        `;
+        const textMessage = `Имя: ${userName}\nФамилия: ${userSurname}\nРезультат: ${score} из ${questions.length}\nВремя прохождения: ${timeStr}\nКомментарий: ${message}\n\n${answersReport}`;
 
-        fetch("https://formspree.io/f/xrewerad", {
-            method: "POST",
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                name: fullName,
-                subject: subject,
-                message: textMessage
+        const payload = {
+            name: fullName,
+            subject: subject,
+            message: textMessage,
+            _replyto: "Jyrbanay@mail.ru",
+            _subject: subject
+        };
+
+        function trySend(attempt) {
+            fetch("https://formspree.io/f/xrewerad", {
+                method: "POST",
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
             })
-        })
-        .then(response => {
-            if (response.ok) {
-                document.getElementById('send-status').innerHTML = "✅ Результат отправлен администратору.";
-                document.getElementById('send-status').style.color = "var(--correct)";
-            } else {
-                throw new Error("Ошибка");
-            }
-        })
-        .catch(error => {
-            document.getElementById('send-status').innerHTML = "⚠️ Ошибка отправки письма.";
-            document.getElementById('send-status').style.color = "var(--incorrect)";
-        });
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('send-status').innerHTML = "✅ Результат отправлен администратору.";
+                    document.getElementById('send-status').style.color = "var(--correct)";
+                } else if (attempt < 2) {
+                    setTimeout(() => trySend(attempt + 1), 2000);
+                } else {
+                    document.getElementById('send-status').innerHTML = "⚠️ Ошибка отправки. Попробуйте обновить страницу.";
+                    document.getElementById('send-status').style.color = "var(--incorrect)";
+                }
+            })
+            .catch(() => {
+                if (attempt < 2) {
+                    setTimeout(() => trySend(attempt + 1), 2000);
+                } else {
+                    document.getElementById('send-status').innerHTML = "⚠️ Ошибка сети. Проверьте интернет и попробуйте снова.";
+                    document.getElementById('send-status').style.color = "var(--incorrect)";
+                }
+            });
+        }
+
+        trySend(0);
     }
 </script>
 
