@@ -407,6 +407,7 @@
 
     function stopTimer() {
         clearInterval(timerInterval);
+        elapsedTime = Date.now() - startTime;
     }
 
     document.getElementById('start-btn').addEventListener('click', () => {
