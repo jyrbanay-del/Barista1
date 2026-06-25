@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Архитектура Возврата · Руководство бариста</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#07060500;       /* Прозрачный базовый */
+    --espresso:#0C0A09;     /* Глубокий эспрессо фон */
+    --graphite:#15110E;     /* Графит для карточек */
+    --steel:#2A211B;        /* Сталь для границ */
+    --grey:#6B5D52;         /* Приглушенный серо-кофейный */
+    --silver:#A89684;       /* Серебристо-бежевый текст */
+    --cream:#F5F0E8;        /* Кремовый основной текст */
+    --burn:#E27D60;         /* Современная терракота (акцент) */
+    --gold:#C9A86A;         /* Матовое шампанское золото */
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--espresso);color:var(--cream);font-family:'Inter',sans-serif;overflow:hidden;height:100vh;width:100vw}
+  .serif{font-family:'Fraunces',serif}
+  .display{font-family:'Fraunces',serif;font-variation-settings:"opsz" 144}
+  
+  /* Анимированный фон с абстрактными пятнами */
+  #grainCanvas{position:fixed;inset:0;z-index:0;opacity:.4;pointer-events:none}
+  .orb{position:fixed;border-radius:50%;filter:blur(100px);z-index:0;pointer-events:none;opacity:.15}
+  .orb-1{width:600px;height:600px;background:var(--burn);top:-200px;right:-100px;animation:float 20s infinite ease-in-out}
+  .orb-2{width:500px;height:500px;background:var(--gold);bottom:-150px;left:-100px;animation:float 25s infinite ease-in-out reverse}
+  @keyframes float{
+    0%,100%{transform:translate(0,0)}
+    50%{transform:translate(50px,30px)}
+  }
+  
+  /* Виньетка */
+  .vignette{position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(ellipse at center,transparent 30%,rgba(12,10,9,.9) 100%);
+  }
+  
+  /* Прогресс */
+  .progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--burn),var(--gold));z-index:50;transition:width .6s cubic-bezier(.7,0,.3,1);box-shadow:0 0 15px var(--burn)}
+  
+  /* Навигация */
+  .nav-dots{position:fixed;right:28px;top:50%;transform:translateY(-50%);z-index:40;display:flex;flex-direction:column;gap:18px}
+  .nav-dots button{display:flex;align-items:center;gap:12px;background:none;border:none;cursor:pointer;color:rgba(245,240,232,.3);font-family:'Inter';font-size:10px;letter-spacing:.2em;text-transform:uppercase;transition:color .3s}
+  .nav-dots button .dot{width:6px;height:6px;border-radius:50%;background:rgba(245,240,232,.2);transition:all .3s}
+  .nav-dots button.active{color:var(--burn)}
+  .nav-dots button.active .dot{background:var(--burn);box-shadow:0 0 10px var(--burn);transform:scale(1.5)}
+  .nav-dots button:hover{color:var(--cream)}
+  .nav-dots .label{opacity:0;transform:translateX(8px);transition:all .3s}
+  .nav-dots button:hover .label,.nav-dots button.active .label{opacity:1;transform:translateX(0)}
+  
+  /* Стрелки */
+  .arrows{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);z-index:40;display:flex;gap:20px;align-items:center}
+  .arrows button{width:44px;height:44px;border-radius:50%;border:1px solid var(--steel);background:rgba(21,17,14,.6);backdrop-filter:blur(10px);color:var(--silver);cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center}
+  .arrows button:hover:not(:disabled){border-color:var(--burn);color:var(--burn);transform:scale(1.08);box-shadow:0 0 20px rgba(226,125,96,.2)}
+  .arrows button:disabled{opacity:.15;cursor:not-allowed}
+  .counter{font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:var(--gold);min-width:70px;text-align:center}
+  
+  /* Слайды */
+  .deck{position:relative;width:100vw;height:100vh;z-index:2}
+  .slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:6vh 7vw;opacity:0;pointer-events:none;transform:translateY(30px);transition:opacity .8s cubic-bezier(.7,0,.3,1),transform .8s cubic-bezier(.7,0,.3,1)}
+  .slide.prev{transform:translateY(-30px);opacity:0}
+  .slide.active{opacity:1;pointer-events:auto;transform:translateY(0)}
+  
+  /* Анимация появления */
+  .slide .reveal{opacity:0;transform:translateY(30px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+  .slide.active .reveal{opacity:1;transform:translateY(0)}
+  .slide.active .reveal:nth-child(1){transition-delay:.1s}
+  .slide.active .reveal:nth-child(2){transition-delay:.25s}
+  .slide.active .reveal:nth-child(3){transition-delay:.4s}
+  .slide.active .reveal:nth-child(4){transition-delay:.55s}
+  .slide.active .reveal:nth-child(5){transition-delay:.7s}
+  .slide.active .reveal:nth-child(6){transition-delay:.85s}
+  
+  /* Типографика */
+  .eyebrow{font-family:'Inter';font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:var(--burn);font-weight:600}
+  .h-display{font-family:'Fraunces',serif;font-variation-settings:"opsz" 144;font-weight:700;line-height:.95;letter-spacing:-.03em}
+  .h-italic{font-family:'Fraunces',serif;font-style:italic;font-weight:300}
+  
+  /* Карточки Glassmorphism */
+  .glass{background:linear-gradient(135deg,rgba(245,240,232,.03),rgba(245,240,232,.01));border:1px solid rgba(245,240,232,.06);backdrop-filter:blur(10px);border-radius:8px;transition:all .4s}
+  .glass:hover{border-color:rgba(226,125,96,.4);background:linear-gradient(135deg,rgba(226,125,96,.05),rgba(245,240,232,.02));transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  
+  .num-tag{font-family:'Fraunces',serif;font-style:italic;font-weight:300;color:var(--gold);font-size:12px;letter-spacing:.1em}
+  .big-num{font-family:'Fraunces',serif;font-variation-settings:"opsz" 144;font-weight:900;color:var(--burn);line-height:.85;opacity:.9}
+  
+  /* Пар */
+  .steam{position:absolute;width:2px;height:50px;background:linear-gradient(to top,transparent,var(--cream),transparent);border-radius:50%;filter:blur(1px);animation:steam 4s infinite ease-in-out;opacity:0}
+  @keyframes steam{
+    0%{transform:translateY(0) scaleY(1);opacity:0}
+    30%{opacity:.4}
+    100%{transform:translateY(-100px) scaleY(1.5);opacity:0}
+  }
+  
+  /* Линии и маркеры */
+  .underline-burn{background:linear-gradient(90deg,var(--burn),var(--gold));background-size:100% 30%;background-repeat:no-repeat;background-position:0 85%;padding:0 2px;color:var(--cream)}
+  .rule-item{display:flex;gap:20px;align-items:flex-start;padding:16px 0;border-bottom:1px solid rgba(245,240,232,.05)}
+  .rule-item:last-child{border-bottom:none}
+  .rule-marker{font-family:'Fraunces',serif;font-style:italic;color:var(--burn);font-size:16px;min-width:30px;padding-top:4px}
+  
+  /* Сценарии */
+  .scenario{display:grid;grid-template-columns:1fr auto 1.5fr;gap:24px;align-items:center;padding:20px 24px;border:1px solid rgba(245,240,232,.06);border-radius:8px;background:linear-gradient(135deg,rgba(21,17,14,.6),rgba(21,17,14,.3));transition:all .3s}
+  .scenario:hover{border-color:rgba(226,125,96,.3);background:linear-gradient(135deg,rgba(226,125,96,.03),rgba(21,17,14,.5))}
+  .scenario .trigger{color:var(--cream);font-family:'Fraunces',serif;font-style:italic;font-size:18px}
+  .scenario .arrow{color:var(--burn);font-size:20px;opacity:.8}
+  .scenario .response{color:var(--silver);font-size:13px;line-height:1.6}
+  .scenario .response b{color:var(--gold);font-weight:600}
+  
+  /* Фразы */
+  .phrase-bad{color:#5C504A;text-decoration:line-through;text-decoration-color:var(--burn);font-family:'Fraunces',serif;font-style:italic;font-size:18px}
+  .phrase-good{color:var(--gold);font-family:'Fraunces',serif;font-style:italic;font-size:18px}
+  
+  /* Чек-лист */
+  .check-item{display:flex;gap:14px;align-items:flex-start;padding:10px 0;color:var(--silver);font-size:13px;line-height:1.4}
+  .check-box{width:16px;height:16px;border:1px solid var(--steel);border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s;margin-top:2px}
+  .check-box::after{content:'';width:8px;height:8px;background:var(--burn);border-radius:1px;opacity:0;transition:opacity .3s}
+  .check-item:hover .check-box{border-color:var(--burn)}
+  .check-item:hover .check-box::after{opacity:1}
+  .check-item:hover{color:var(--cream)}
+  
+  /* Сетка фона */
+  .grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(245,240,232,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(245,240,232,.015) 1px,transparent 1px);background-size:100px 100px;pointer-events:none}
+  
+  @media (max-width:900px){
+    .nav-dots{display:none}
+    .scenario{grid-template-columns:1fr;gap:8px}
+    .scenario .arrow{transform:rotate(90deg);justify-self:start}
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<canvas id="grainCanvas"></canvas>
+<div class="vignette"></div>
+
+<div class="progress" id="progress" style="width:10%"></div>
+
+<nav class="nav-dots" id="navDots"></nav>
+
+<div class="arrows">
+  <button id="prevBtn" aria-label="Назад">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <div class="counter"><span id="curNum">01</span> <span style="opacity:.3">/</span> <span id="totalNum">10</span></div>
+  <button id="nextBtn" aria-label="Вперёд">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+</div>
+
+<main class="deck" id="deck">
+
+<!-- СЛАЙД 1: ПРОЛОГ -->
+<section class="slide active">
+  <div class="grid-bg"></div>
+  <div class="relative max-w-6xl w-full">
+    <div class="absolute" style="top:-40px;left:-20px">
+      <div class="relative">
+        <div class="steam" style="left:10px;animation-delay:0s"></div>
+        <div class="steam" style="left:20px;animation-delay:1s"></div>
+        <div class="steam" style="left:30px;animation-delay:2s"></div>
+        <svg width="48" height="40" viewBox="0 0 48 40" style="margin-top:50px">
+          <path d="M4 8 L36 8 L34 28 Q34 36 24 36 Q14 36 14 28 Z" fill="none" stroke="#E27D60" stroke-width="1.5"/>
+          <path d="M36 12 Q44 12 44 20 Q44 28 36 28" fill="none" stroke="#E27D60" stroke-width="1.5"/>
+        </svg>
+      </div>
+    </div>
+    
+    <div class="reveal eyebrow mb-10">Внутреннее руководство · Концепция сервиса</div>
+    
+    <h1 class="reveal h-display mb-8" style="font-size:clamp(56px,8vw,130px)">
+      Архитектура<br>
+      <span class="h-italic" style="font-weight:300;color:var(--silver)">возврата</span>
+    </h1>
+    
+    <div class="reveal grid md:grid-cols-2 gap-12 mt-12 max-w-4xl">
+      <div>
+        <div class="eyebrow mb-2" style="color:var(--grey)">Манифест</div>
+        <p class="text-base" style="color:var(--silver);line-height:1.6">
+          Кофейня — это не точка продаж кофе. Это агрегатор состояний. Люди приходят сюда за 15 минут перезагрузки между стрессами. Ваша задача — не сварить эспрессо, а <span class="underline-burn">сварить правильное настроение</span>.
+        </p>
+      </div>
+      <div class="md:border-l md:pl-12" style="border-color:var(--steel)">
+        <div class="eyebrow mb-2" style="color:var(--grey)">Для кого</div>
+        <p class="text-base" style="color:var(--silver);line-height:1.6">
+          Это не инструкция для новичка. Это система координат для профессионала. То, как вы встречаете, говорите, решаете конфликты и провожаете — определяет, вернется ли гость завтра.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- СЛАЙД 2: ПОРОГ -->
+<section class="slide">
+  <div class="max-w-6xl w-full">
+    <div class="reveal eyebrow mb-4">Акт 01 · Встреча</div>
+    <div class="reveal flex items-end justify-between flex-wrap gap-6 mb-12">
+      <h2 class="h-display" style="font-size:clamp(48px,6.5vw,100px);line-height:.95">
+        Эффект<br><span class="h-italic" style="color:var(--burn);font-weight:300">порога</span>
+      </h2>
+      <p class="serif italic text-lg max-w-md" style="color:var(--silver)">
+        Гость принимает решение о лояльности к заведению в первые <span class="underline-burn">7 секунд</span>, еще до того, как сделает глоток.
+      </p>
+    </div>
+    
+    <div class="grid md:grid-cols-4 gap-5">
+      <div class="reveal glass p-6">
+        <div class="num-tag mb-4">01 · Контакт</div>
+        <h3 class="serif text-xl mb-3" style="color:var(--cream)">Взгляд раньше заказа</h3>
+        <p class="text-sm leading-relaxed" style="color:var(--grey)">
+          Когда дверь открывается, поймайте взгляд гостя. Короткий кивок: «Я вас заметил». Это снимает социальную тревогу очереди и дает человеку ощущение контроля над пространством.
+        </p>
+      </div>
+      <div class="reveal glass p-6">
+        <div class="num-tag mb-4">02 · Постура</div>
+        <h3 class="serif text-xl mb-3" style="color:var(--cream)">Открытая стойка</h3>
+        <p class="text-sm leading-relaxed" style="color:var(--grey)">
+          Руки на стойке, не скрещены. Корпус слегка наклонен к гостю. Телефон убран в ящик. Ваша поза должна транслировать: «Я здесь ради вас, а не ради ожидания вашей оплаты».
+        </p>
+      </div>
+      <div class="reveal glass p-6">
+        <div class="num-tag mb-4">03 · Микромимика</div>
+        <h3 class="serif text-xl mb-3" style="color:var(--cream)">Искренняя теплота</h3>
+        <p class="text-sm leading-relaxed" style="color:var(--grey)">
+          Натянутая улыбка считывается мозгом как угроза. Используйте микромимику: легкое поднятие бровей, спокойный взгляд, мягкий тембр голоса. Искренность работает лучше актерской игры.
+        </p>
+      </div>
+      <div class="reveal glass p-6">
+        <div class="num-tag mb-4">04 · Калибровка</div>
+        <h3 class="serif text-xl mb-3" style="color:var(--cream)">Чтение темпа</h3>
+        <p class="text-sm leading-relaxed" style="color:var(--grey)">
+          Оцените гостя за 2 секунды. Человек на бегу с рюкзаком или медленный гость с книгой? Адаптируйте темп речи и уровень энергии под его состояние. Не тормозите суетливых, не торопите задумчивых.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- СЛАЙД 3: АЛХИМИЯ ДИАЛОГА -->
+<section class="slide">
+  <div class="max-w-6xl w-full">
+    <div class="reveal eyebrow mb-4">Акт 02 · Коммуникация</div>
+    <h2 class="reveal h-display mb-3" style="font-size:clamp(48px,6.5vw,100px);line-height:.95">
+      Алхимия<br><span class="h-italic" style="color:var(--gold);font-weight:300">диалога</span>
+    </h2>
+    <p class="reveal serif italic text-lg mb-10 max-w-2xl" style="color:var(--silver)">
+      Транзакция — это мертвый конец. Разговор — это петля, которая приведет его обратно. Не продавайте, создавайте контекст.
+    </p>
+    
+    <div class="grid md:grid-cols-12 gap-10">
+      <div class="md:col-span-5 reveal">
+        <div class="glass p-6 mb-5" style="border-left:2px solid var(--burn)">
+          <h4 class="serif text-lg mb-2" style="color:var(--cream)">Принцип открытых петель</h4>
+          <p class="text-sm" style="color:var(--grey)">
+            Закрытый вопрос («Вам капучино?») убивает диалог. Открытый («Какой кофе вы обычно пьете по утрам?») приглашает к рассказу. Люди любят говорить о своих привычках.
+          </p>
+        </div>
+        <div class="glass p-6" style="border-left:2px solid var(--gold)">
+          <h4 class="serif text-lg mb-2" style="color:var(--cream)">Зеркальное отражение</h4>
+          <p class="text-sm" style="color:var(--grey)">
+            Повторяйте заказ вслух, добавляя детали: «Флэт уайт на овсяном, немного корицы, на вы?». Это дает гостю чувство безопасности — он услышал, что его поняли идеально.
+          </p>
+        </div>
+      </div>
+      
+      <div class="md:col-span-7 reveal">
+        <div class="rule-item">
+          <span class="rule-marker">i.</span>
+          <div>
+            <h4 class="serif text-lg" style="color:var(--cream)">Ненавязчивый апселл</h4>
+            <p class="text-sm mt-1" style="color:var(--grey)">Вместо агрессивного «Возьмите кекс?», используйте контекст: «К этому флэт уайту отлично подходит наш миндальный кекс, только сегодня испекли». Предложение как рекомендация друга.</p>
+          </div>
+        </div>
+        <div class="rule-item">
+          <span class="rule-marker">ii.</span>
+          <div>
+            <h4 class="serif text-lg" style="color:var(--cream)">Эффект имени</h4>
+            <p class="text-sm mt-1" style="color:var(--grey)">Имя человека — самый сладостный звук. Спросите имя для чашки, а затем используйте его при выдаче заказа. «Алексей, ваш капучино готов» звучит иначе, чем просто «Капучино на вы!».</p>
+          </div>
+        </div>
+        <div class="rule-item">
+          <span class="rule-marker">iii.</span>
+          <div>
+            <h4 class="serif text-lg" style="color:var(--cream)">Право на тишину</h4>
+            <p class="text-sm mt-1" style="color:var(--grey)">Утренний гость часто не хочет болтать. Он хочет ритуала. Уважайте его право на молчание. Кивок, точное исполнение, выдача — иногда это лучшая коммуникация.</p>
+          </div>
+        </div>
+        <div class="rule-item">
+          <span class="rule-marker">iv.</span>
+          <div>
+            <h4 class="serif text-lg" style="color:var(--cream)">Якорение деталей</h4>
+            <p class="text-sm mt-1" style="color:var(--grey)">Запоминайте детали. «В прошлый раз вы брали без кофеина, вам так же?» — это мощнейший триггер лояльности. Вы запомнили не заказ, вы запомнили человека.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- СЛАЙД 4: НАВИГАЦИЯ В ШТОРМЕ -->
+<section class="slide">
+  <div class="max-w-6xl w-full">
+    <div class="reveal eyebrow mb-4">Акт 03 · Разрешение конфликтов</div>
+    <h2 class="reveal h-display mb-3" style="font-size:clamp(44px,6vw,90px);line-height:.95">
+      Навигация<br><span class="h-italic" style="color:var(--burn);font-weight:300">в шторме</span>
+    </h2>
+    <p class="reveal serif italic text-lg mb-8 max-w-2xl" style="color:var(--silver)">
+      Гнев гостя — это не атака на вас. Это крик о потере контроля. Ваша задача — не победить в споре, а вернуть ему чувство безопасности.
+    </p>
+    
+    <div class="grid gap-3">
+      <div class="reveal scenario">
+        <div class="trigger">«Кофе остыл»</div>
+        <div class="arrow">→</div>
+        <div class="response"><b>Техника признания.</b> Никаких оправданий про машину. «Простите за это. Сейчас переварю свежий, а пока — печенье за счет заведения». Вы компенсируете дискомфорт превышением ожиданий.</div>
+      </div>
+      <div class="reveal scenario">
+        <div class="trigger">«Слишком долго ждали»</div>
+        <div class="arrow">→</div>
+        <div class="response"><b>Валидация эмоции.</b> «Вы правы, сегодня очередь не по стандарту. Спасибо, что подождали. Ваш кофе за наш счет». Унижение оправданиями хуже самой задержки.</div>
+      </div>
+      <div class="reveal scenario">
+        <div class="trigger">«Невкусно / Не то, что обычно»</div>
+        <div class="arrow">→</div>
+        <div class="response"><b>Диагностический вопрос.</b> «Подскажите, что именно не так: горечь, кислотность, текстура молока?». Превращаем эмоциональную претензию в техническую задачу. Переделываем без раздражения.</div>
+      </div>
+      <div class="reveal scenario">
+        <div class="trigger">«Открытая агрессия»</div>
+        <div class="arrow">→</div>
+        <div class="response"><b>Депрессия темпа.</b> Снижайте голос, делайте паузы. Не заражайтесь чужим адреналином. Если гость не успокаивается — мягко передайте контакт менеджеру. Ваша психика важнее чека.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- СЛАЙД 5: ГРАВИТАЦИЯ ВОЗВРАТА -->
+<section class="slide">
+  <div class="max-w-6xl w-full">
+    <div class="reveal eyebrow mb-4">Акт 04 · Лояльность</div>
+    <h2 class="reveal h-display mb-4" style="font-size:clamp(44px,6vw,95px);line-height:.95">
+      Гравитация<br><span class="h-italic" style="color:var(--gold);font-weight:300">возврата</span>
+    </h2>
+    <p class="reveal serif italic text-lg mb-10 max-w-2xl" style="color:var(--silver)">
+      Лояльность не создается штампами на карточках. Она создается микро-моментами, которые гость не может получить в автомате или сети быстрого питания.
+    </p>
+    
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="reveal glass p-7">
+        <div class="big-num text-4xl mb-4" style="color:var(--burn)">01</div>
+        <h3 class="serif text-xl mb-3" style="color:var(--cream)">Эффект эндаумента</h3>
+        <p class="text-sm leading-relaxed" style="color:var(--grey)">
+          Мелочь-комплимент к заказу создает чувство долга (в хорошем смысле). Кусочек темного шоколада к эспрессо стоит копейки, но гость чувствует себя VIP-клиентом. Вы вложили в него больше, чем он заплатил.
+        </p>
+      </div>
+      <div class="reveal glass p-7">
+        <div class="big-num text-4xl mb-4" style="color:var(--burn)">02</div>
+        <h3 class="serif text-xl mb-3" style="color:var(--cream)">Триггер ожидания</h3>
+        <p class="text-sm leading-relaxed" style="color:var(--grey)">
+          Создайте причину для следующего визита. «На следующей неделе у нас будет дегустация нового моносорта из Эфиопии». Мозг гостя получает задел на будущее. Вы становитесь частью его планов.
+        </p>
+      </div>
+      <div class="reveal glass p-7">
+        <div class="big-num text-4xl mb-4" style="color:var(--burn)">03</div>
+        <h3 class="serif text-xl mb-3" style="color:var(--cream)">Персонализация</h3>
+        <p class="text-sm leading-relaxed" style="color:var(--grey)">
+          Запоминание привычек — суперсила. «Как обычно, флэт уайт, но сегодня, может, добавим сироп фундука?». Это ломает стену между «продавцом» и «покупателем». Вы становитесь его личным бариста.
+        </p>
+      </div>
+      <div class="reveal glass p-7">
+        <div class="big-num text-4xl mb-4" style="color:var(--burn)">04</div>
+        <h3 class="serif text-xl mb-3" style="color:var(--cream)">Ритуал прощания</h3>
+        <p class="text-sm leading-relaxed" style="color:var(--grey)">
+          Вместо сухого «Приходите еще» используйте теплое «Будем ждать вас завтра, хорошего дня, Алексей». Вы провожаете его как друг. Этот последний штрих закрепляет позитивный опыт в памяти.
+        </p>
+      </div>
+      <div class="reveal glass p-7">
+        <div class="big-num text-4xl mb-4" style="color:var(--burn)">05</div>
+        <h3 class="serif text-xl mb-3" style="color:var(--cream)">Мягкая интеграция лояльности</h3>
+        <p class="text-sm leading-relaxed" style="color:var(--grey)">
+          Карточки лояльности работают, если предлагать их контекстно. «Кстати, у нас есть приложение — шестая чашка в подарок, оформим?». Не агрессивно, как на кассе супермаркета, а как рекомендацию.
+        </p>
+      </div>
+      <div class="reveal glass p-7">
+        <div class="big-num text-4xl mb-4" style="color:var(--burn)">06</div>
+        <h3 class="serif text-xl mb-3" style="color:var(--cream)">Теория малых деталей</h3>
+        <p class="text-sm leading-relaxed" style="color:var(--grey)">
+          Имя на стакане, написанное красивым почерком. Латте-арт вместо просто пены. Правильная температура воды. Гость не знает всех правил, но он чувствует разницу между ремеслом и конвейером.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- СЛАЙД 6: ТЕНЕВОЙ ЯЗЫК -->
+<section class="slide">
+  <div class="max-w-6xl w-full">
+    <div class="reveal eyebrow mb-4">Акт 05 · Психология языка</div>
+    <h2 class="reveal h-display mb-3" style="font-size:clamp(40px,5.5vw,88px);line-height:.95">
+      Фразы, из-за которых<br><span class="h-italic" style="color:var(--burn);font-weight:300">гость не вернется</span>
+    </h2>
+    <p class="reveal serif italic text-lg mb-10" style="color:var(--silver)">
+      Язык строит реальность. Каждое слово — это либо мост к гостю, либо стена. Устраните из лексикона фразы, транслирующие безразличие, защиту или обвинение.
+    </p>
+    
+    <div class="grid md:grid-cols-2 gap-x-16 gap-y-7">
+      <div class="reveal flex flex-col gap-2">
+        <div class="flex items-center gap-3">
+          <span class="phrase-bad">«Я не знаю»</span>
+          <span style="color:var(--burn)">→</span>
+          <span class="phrase-good">«Уточню для вас прямо сейчас»</span>
+        </div>
+        <p class="text-xs pl-2" style="color:var(--grey)">Первая фраза обрывает связь. Вторая показывает, что вы готовы инвестировать свое время в запрос гостя.</p>
+      </div>
+      <div class="reveal flex flex-col gap-2">
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="phrase-bad">«Такого у нас нет»</span>
+          <span style="color:var(--burn)">→</span>
+          <span class="phrase-good">«Могу предложить вместо этого…»</span>
+        </div>
+        <p class="text-xs pl-2" style="color:var(--grey)">Отказ демотивирует. Предложение альтернативы переводит ситуацию из тупика в выбор.</p>
+      </div>
+      <div class="reveal flex flex-col gap-2">
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="phrase-bad">«Подождите»</span>
+          <span style="color:var(--burn)">→</span>
+          <span class="phrase-good">«Готовлю ~2 минуты, подскажите имя?»</span>
+        </div>
+        <p class="text-xs pl-2" style="color:var(--grey)">Неопределенность вызывает тревогу. Точный таймфрейн дает контроль. Вопрос имени заполняет паузу.</p>
+      </div>
+      <div class="reveal flex flex-col gap-2">
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="phrase-bad">«Это политика заведения»</span>
+          <span style="color:var(--burn)">→</span>
+          <span class="phrase-good">«К сожалению, по-другому не получится, но…»</span>
+        </div>
+        <p class="text-xs pl-2" style="color:var(--grey)">«Политика» звучит как关门ение дверей бюрократией. Личное сожаление человечит отказ.</p>
+      </div>
+      <div class="reveal flex flex-col gap-2">
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="phrase-bad">«Вообще-то правильно говорить…»</span>
+          <span style="color:var(--burn)">→</span>
+          <span class="phrase-good">молча принимаем заказ</span>
+        </div>
+        <p class="text-xs pl-2" style="color:var(--grey)">Никогда не исправляйте произношение гостя (макиато, латтэ и т.д.). Снобизм убивает лояльность мгновенно.</p>
+      </div>
+      <div class="reveal flex flex-col gap-2">
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="phrase-bad">«Ну вы же сами заказали»</span>
+          <span style="color:var(--burn)">→</span>
+          <span class="phrase-good">«Давайте я переделаю под вас»</span>
+        </div>
+        <p class="text-xs pl-2" style="color:var(--grey)">Обвинение гостя — худший сценарий. Потеря 100 рублей на кофе окупится, если гость вернется еще 10 раз.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- СЛАЙД 7: ХРОНОТИП ГОСТЯ -->
+<section class="slide">
+  <div class="max-w-6xl w-full">
+    <div class="reveal eyebrow mb-4">Акт 06 · Контекст</div>
+    <h2 class="reveal h-display mb-3" style="font-size:clamp(40px,5.5vw,85px);line-height:.95">
+      Хронотип<br><span class="h-italic" style="color:var(--gold);font-weight:300">гостя</span>
+    </h2>
+    <p class="reveal serif italic text-lg mb-10" style="color:var(--silver)">
+      Один и тот же человек в 7:30 и в 18:00 — два разных гостя с разными потребностями. Читайте состояние так же внимательно, как экстракцию кофе.
+    </p>
+    
+    <div class="grid md:grid-cols-4 gap-4">
+      <div class="reveal glass p-6">
+        <div class="big-num text-3xl mb-2" style="color:var(--cream)">07:30</div>
+        <h4 class="serif text-lg mb-3" style="color:var(--burn)">Утренний драйв</h4>
+        <p class="text-xs leading-relaxed" style="color:var(--grey)">
+          Гость зомбирован рутиной. Ему нужен быстрый, точный ритуал без лишних слов. Работайте в темпе метронома. Теплый кивок, идеальная температура, быстрый кофе в руки. Он оценит вашу скорость, а не ваши шутки.
+        </p>
+      </div>
+      <div class="reveal glass p-6">
+        <div class="big-num text-3xl mb-2" style="color:var(--cream)">11:00</div>
+        <h4 class="serif text-lg mb-3" style="color:var(--burn)">Дыхание дня</h4>
+        <p class="text-xs leading-relaxed" style="color:var(--grey)">
+          Гость выдохнул после первой половины дня. Появилось время для разговора. Это момент для мягкого апселла, рассказа о новинках, предложения сезонного десерта. Гость готов тратить больше времени и денег.
+        </p>
+      </div>
+      <div class="reveal glass p-6">
+        <div class="big-num text-3xl mb-2" style="color:var(--cream)">15:00</div>
+        <h4 class="serif text-lg mb-3" style="color:var(--burn)">Экспериментатор</h4>
+        <p class="text-xs leading-relaxed" style="color:var(--grey)">
+          Послеполуденный спад энергии. Гость ищет novelty (новизну). Идеальное время предложить дрип-кофе, альтернативу, спешиалти-сорт. Расскажите историю зерна. Энергия интереса бодрит лучше кофеина.
+        </p>
+      </div>
+      <div class="reveal glass p-6">
+        <div class="big-num text-3xl mb-2" style="color:var(--burn)">19:00</div>
+        <h4 class="serif text-lg mb-3" style="color:var(--burn)">Вечерний релакс</h4>
+        <p class="text-xs leading-relaxed" style="color:var(--grey)">
+          Окончание рабочего дня. Темп замедляется. Гость хочет декомпрессии. Предложите декаф, уютную подачу, создайте атмосферу мягкого света и спокойной музыки. Не торопите его забирать заказ.
+        </p>
+      </div>
+    </div>
+    
+    <div class="reveal mt-8 p-6 glass" style="border-left:2px solid var(--burn)">
+      <p class="serif italic text-base" style="color:var(--silver)">
+        «Читайте гостя как рецепт. Сначала — ингредиенты (внешний вид, поза), потом — температура (настроение), и только потом — метод (как общаться). Ошибка в температуре убьет даже идеально сваренный кофе».
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- СЛАЙД 8: ДИСЦИПЛИНА СМЕНЫ -->
+<section class="slide">
+  <div class="max-w-6xl w-full">
+    <div class="reveal eyebrow mb-4">Акт 07 · Профессионализм</div>
+    <h2 class="reveal h-display mb-3" style="font-size:clamp(44px,6vw,92px);line-height:.95">
+      Дисциплина<br><span class="h-italic" style="color:var(--burn);font-weight:300">смены</span>
+    </h2>
+    <p class="reveal serif italic text-lg mb-10 max-w-2xl" style="color:var(--silver)">
+      Хаос на станции всегда считывается гостем подсознательно. Чистая, откалиброванная стойка транслирует спокойствие и доверие. Ритуал подготовки — основа стабильного сервиса.
+    </p>
+    
+    <div class="grid md:grid-cols-2 gap-x-16 gap-y-2">
+      <div>
+        <div class="eyebrow mb-4" style="color:var(--gold)">Открытие (Pre-shift)</div>
+        <div class="reveal check-item"><div class="check-box"></div><span>Форма чистая, фартук выглажен, волосы убраны. Выглядите как профессионал.</span></div>
+        <div class="reveal check-item"><div class="check-box"></div><span>Холостые проливы эспрессо. Проверка экстракции, веса, времени.</span></div>
+        <div class="reveal check-item"><div class="check-box"></div><span>Калибровка питчеров и температуры молока (оптимально 4°C).</span></div>
+        <div class="reveal check-item"><div class="check-box"></div><span>Проверка чистоты групп: бэкфлаш, чистые портафильтры без налета.</span></div>
+        <div class="reveal check-item"><div class="check-box"></div><span>Загрузка стаканов, сиропов, воды. Ничто не должно закончиться в час пик.</span></div>
+        <div class="reveal check-item"><div class="check-box"></div><span>Музыка: подобран плейлист, громкость на уровне 60-65 дБ (фоновая).</span></div>
+      </div>
+      <div>
+        <div class="eyebrow mb-4" style="color:var(--gold)">Во время и закрытие</div>
+        <div class="reveal check-item"><div class="check-box"></div><span>Правило 30 секунд: стойка протирается в течение 30 сек после выдачи заказа.</span></div>
+        <div class="reveal check-item"><div class="check-box"></div><span>Паровой рожок продувается и протирается после КАЖДОГО питчера.</span></div>
+        <div class="reveal check-item"><div class="check-box"></div><span>Темперер в холодильнике молока проверяется каждые 2 часа.</span></div>
+        <div class="reveal check-item"><div class="check-box"></div><span>Смена воды в бойлере (если применимо) и очистка льдогенератора.</span></div>
+        <div class="reveal check-item"><div class="check-box"></div><span>Глубокая очистка кофемолки: чистка бункера, dishwasher для контейнеров.</span></div>
+        <div class="reveal check-item"><div class="check-box"></div><span>Финальный бэкфлаш с химикой, разборка и чистка душек и диффузоров.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- СЛАЙД 9: ЭПИЛОГ -->
+<section class="slide">
+  <div class="grid-bg"></div>
+  <div class="max-w-5xl text-center relative">
+    <div class="reveal eyebrow mb-10">Эпилог · Напутствие</div>
+    
+    <blockquote class="reveal h-display" style="font-size:clamp(40px,5.5vw,85px);line-height:1.02;letter-spacing:-.02em">
+      <span style="color:var(--cream)">Ты — не человек</span><br>
+      <span class="h-italic" style="font-weight:300;color:var(--silver)">за стойкой.</span><br>
+      <span style="color:var(--cream)">Ты — архитектор</span> <span class="underline-burn">возврата.</span><br>
+      <span class="h-italic" style="font-weight:300;color:var(--burn)">То, ради чего они вернутся завтра.</span>
+    </blockquote>
+    
+    <div class="reveal mt-16 flex flex-col items-center gap-6">
+      <div class="flex items-center gap-4 text-sm" style="color:var(--grey)">
+        <span style="width:40px;height:1px;background:var(--burn)"></span>
+        <span class="serif italic">Шеф-бариста · Конец руководства</span>
+        <span style="width:40px;height:1px;background:var(--burn)"></span>
+      </div>
+      <p class="serif italic text-base max-w-lg" style="color:var(--silver)">
+        Технологию можно выучить за неделю. Состояние, которое вы создаете, формируется годами. Инвестируйте в людей так же, как в зерно.
+      </p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+// === Абстрактный Canvas фон (частицы/пятна) ===
+const canvas = document.getElementById('grainCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+
+function resize(){
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+class Particle {
+  constructor(){
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.r = 1 + Math.random() * 2;
+    this.vx = (Math.random() - .5) * 0.2;
+    this.vy = (Math.random() - .5) * 0.2;
+    this.alpha = 0.1 + Math.random() * 0.4;
+    this.color = Math.random() > 0.7 ? '226,125,96' : '201,168,106'; // RGB для терракоты и золота
+  }
+  update(){
+    this.x += this.vx;
+    this.y += this.vy;
+    if(this.x < 0 || this.x > W) this.vx *= -1;
+    if(this.y < 0 || this.y > H) this.vy *= -1;
+  }
+  draw(){
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${this.color},${this.alpha})`;
+    ctx.fill();
+  }
+}
+
+for(let i = 0; i < 80; i++) particles.push(new Particle());
+
+// Соединительные линии
+function connect() {
+  let opacity = 1;
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      let dx = particles[i].x - particles[j].x;
+      let dy = particles[i].y - particles[j].y;
+      let dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 120) {
+        opacity = 1 - (dist / 120);
+        ctx.strokeStyle = `rgba(168,150,132,${opacity * 0.05})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function animate(){
+  ctx.clearRect(0, 0, W, H);
+  particles.forEach(p => { p.update(); p.draw(); });
+  connect();
+  requestAnimationFrame(animate);
+}
+animate();
+
+// === Логика слайдера ===
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let current = 0;
+
+document.getElementById('totalNum').textContent = String(total).padStart(2, '0');
+
+const slideTitles = [
+  'Пролог', 'Встреча', 'Диалог', 'Шторм', 
+  'Возврат', 'Язык', 'Контекст', 'Дисциплина', 'Эпилог'
+];
+
+const navDots = document.getElementById('navDots');
+slideTitles.forEach((title, i) => {
+  const btn = document.createElement('button');
+  btn.innerHTML = `<span class="dot"></span><span class="label">${title}</span>`;
+  if(i === 0) btn.classList.add('active');
+  btn.addEventListener('click', () => goTo(i));
+  navDots.appendChild(btn);
+});
+
+function update(){
+  slides.forEach((s, i) => {
+    s.classList.remove('active', 'prev');
+    if(i === current) s.classList.add('active');
+    else if(i < current) s.classList.add('prev');
+  });
+  document.querySelectorAll('.nav-dots button').forEach((b, i) => {
+    b.classList.toggle('active', i === current);
+  });
+  document.getElementById('curNum').textContent = String(current + 1).padStart(2, '0');
+  document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = current === total - 1;
+}
+
+function goTo(i){
+  current = Math.max(0, Math.min(total - 1, i));
+  update();
+}
+function next(){ goTo(current + 1); }
+function prev(){ goTo(current - 1); }
+
+document.getElementById('nextBtn').addEventListener('click', next);
+document.getElementById('prevBtn').addEventListener('click', prev);
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+  if(e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+  if(e.key === 'Home') goTo(0);
+  if(e.key === 'End') goTo(total - 1);
+});
+
+let touchStart = null;
+document.addEventListener('touchstart', e => {
+  touchStart = e.touches[0].clientX;
+});
+document.addEventListener('touchend', e => {
+  if(touchStart === null) return;
+  const dx = e.changedTouches[0].clientX - touchStart;
+  if(Math.abs(dx) > 50){
+    if(dx < 0) next(); else prev();
+  }
+  touchStart = null;
+});
+
+let wheelLock = false;
+document.addEventListener('wheel', e => {
+  if(wheelLock) return;
+  if(Math.abs(e.deltaY) < 20 && Math.abs(e.deltaX) < 20) return;
+  wheelLock = true;
+  setTimeout(() => wheelLock = false, 700);
+  if(e.deltaY > 0 || e.deltaX > 0) next();
+  else prev();
+}, { passive: true });
+
+update();
+</script>
+
+</body>
+</html>
